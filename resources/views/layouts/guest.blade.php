@@ -24,6 +24,13 @@
             <div class="absolute top-0 right-0 w-1/2 h-1/2 bg-indigo-100/30 rounded-bl-[20rem] -z-10"></div>
             <div class="absolute bottom-0 left-0 w-1/2 h-1/2 bg-indigo-50/50 rounded-tr-[20rem] -z-10"></div>
 
+            <div class="absolute top-8 left-8">
+                <a href="/" class="flex items-center text-slate-400 hover:text-indigo-600 transition-colors font-black text-[10px] uppercase tracking-widest group">
+                    <svg class="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+                    Volver al Inicio
+                </a>
+            </div>
+
             <div class="mb-10 text-center animate-fade-in">
                 <a href="/">
                     <span class="text-4xl font-black text-indigo-600 tracking-tighter">PELUQUERÍA<span class="text-slate-900">APP</span></span>

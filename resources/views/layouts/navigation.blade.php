@@ -21,6 +21,10 @@
                     <x-nav-link :href="route('usuario.index')" :active="request()->routeIs('usuario.*')">
                         {{ __('Usuarios') }}
                     </x-nav-link>
+                    <x-nav-link :href="url('/')" class="text-indigo-600 font-black">
+                        <svg class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+                        {{ __('Ver Sitio Web') }}
+                    </x-nav-link>
                 </div>
             </div>
 
@@ -75,6 +79,9 @@
         <div class="pt-2 pb-3 space-y-1">
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                 {{ __('Dashboard') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="url('/')">
+                {{ __('Ver Sitio Web') }}
             </x-responsive-nav-link>
         </div>
 

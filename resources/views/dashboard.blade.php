@@ -1,4 +1,9 @@
 <x-app-layout>
+    {{-- 
+        VISTA DASHBOARD
+        Es el panel de control principal. Utiliza Blade y Tailwind CSS.
+        Muestra diferentes tarjetas de acceso según el rol del usuario logueado.
+    --}}
     <x-slot name="header">
         <h2 class="font-black text-2xl text-slate-800 leading-tight">
             {{ __('Panel de Control') }}
@@ -8,7 +13,7 @@
     <div class="py-10 bg-slate-50 min-h-screen">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             
-            <!-- Welcome Section -->
+            <!-- SECCIÓN DE BIENVENIDA: Muestra un saludo personalizado y el rol actual -->
             <div class="mb-10 bg-slate-900 rounded-[3rem] p-12 text-white shadow-2xl relative overflow-hidden group">
                 <div class="relative z-10">
                     <span class="inline-block px-4 py-1 rounded-full bg-indigo-500/20 text-indigo-400 text-[10px] font-black uppercase tracking-widest mb-4 border border-indigo-500/30">
@@ -17,15 +22,15 @@
                     <h1 class="text-4xl sm:text-5xl font-black mb-4 tracking-tighter">¡Hola, {{ Auth::user()->name }}! 👋</h1>
                     <p class="text-slate-400 text-lg max-w-xl leading-relaxed">Bienvenido al sistema de gestión. Desde aquí puedes navegar rápidamente a las secciones permitidas para tu nivel de acceso.</p>
                 </div>
-                <!-- Abstract Design Elements -->
+                <!-- Elementos decorativos abstractos -->
                 <div class="absolute -right-10 -bottom-10 w-64 h-64 bg-indigo-600/10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-1000"></div>
                 <div class="absolute top-10 right-20 w-12 h-12 bg-white/5 rounded-2xl rotate-12"></div>
             </div>
 
-            <!-- Dashboard Sections (Cards) -->
+            <!-- GRILLA DE SECCIONES: Organizada en 3 columnas -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
                 
-                <!-- Gestión de Usuarios Card (Visible for ALL) -->
+                <!-- TARJETA: GESTIÓN DE USUARIOS (Visible para todos) -->
                 <a href="{{ route('usuario.index') }}" class="bg-white p-10 rounded-[2.5rem] shadow-sm border border-slate-100 hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 group relative overflow-hidden">
                     <div class="relative z-10">
                         <div class="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400 group-hover:bg-slate-900 group-hover:text-white transition-all duration-500 mb-6 shadow-inner">
@@ -41,7 +46,7 @@
                     <div class="absolute -right-8 -bottom-8 w-24 h-24 bg-slate-50 rounded-full group-hover:scale-150 transition-transform duration-700"></div>
                 </a>
 
-                <!-- Catálogo de Servicios Card (Visible for ALL) -->
+                <!-- TARJETA: CATÁLOGO DE SERVICIOS (Visible para todos) -->
                 <a href="{{ route('servicios.index') }}" class="bg-white p-10 rounded-[2.5rem] shadow-sm border border-slate-100 hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 group relative overflow-hidden">
                     <div class="relative z-10">
                         <div class="w-16 h-16 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-500 mb-6 shadow-inner">
@@ -57,7 +62,7 @@
                     <div class="absolute -right-8 -bottom-8 w-24 h-24 bg-indigo-50 rounded-full group-hover:scale-150 transition-transform duration-700"></div>
                 </a>
 
-                <!-- Estadísticas del Sistema Card (ADMIN ONLY) -->
+                <!-- TARJETA: ESTADÍSTICAS (Solo visible para Administradores) -->
                 @admin
                 <a href="{{ route('admin.index') }}" class="bg-white p-10 rounded-[2.5rem] shadow-sm border border-slate-100 hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 group relative overflow-hidden">
                     <div class="relative z-10">
@@ -74,7 +79,7 @@
                     <div class="absolute -right-8 -bottom-8 w-24 h-24 bg-emerald-50 rounded-full group-hover:scale-150 transition-transform duration-700"></div>
                 </a>
                 @else
-                <!-- Optional Placeholder for non-admins to keep grid balance or just empty -->
+                <!-- Marcador para usuarios no-administradores para mantener el balance visual -->
                 <div class="bg-slate-100/50 p-10 rounded-[2.5rem] border border-dashed border-slate-200 flex items-center justify-center text-center">
                     <div>
                         <svg class="w-12 h-12 text-slate-300 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
@@ -85,7 +90,7 @@
 
             </div>
 
-            <!-- Quick Access Bar for Other Features (Banners, etc) -->
+            <!-- BARRA DE ACCESO RÁPIDO: GESTIÓN DE BANNERS (Solo para Administradores) -->
             @admin
             <div class="mt-12 bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
                 <div class="flex items-center space-x-4 text-center md:text-left">
