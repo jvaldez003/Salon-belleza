@@ -3,6 +3,7 @@
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ServicioController;
 use App\Http\Controllers\UsuariosController;
+use App\Http\Controllers\BannerController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -13,7 +14,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     $servicios = \App\Models\Servicio::all();
-    return view('welcome', compact('servicios'));
+    $banner = \App\Models\Banner::where('activo', true)->latest()->first();
+    return view('welcome', compact('servicios', 'banner'));
 });
 
 Route::get('/dashboard', function () {
@@ -50,13 +52,11 @@ Route::middleware(['auth', 'role:admin,editor'])->group(function () {
     Route::put('usuario/{id}', [UsuariosController::class, 'update'])->name('usuario.update');
     
     // Servicios CRUD
-    Route::get('servicios', [ServicioController::class, 'index'])->name('servicios.index');
-    Route::get('servicios/create', [ServicioController::class, 'create'])->name('servicios.create');
-    Route::post('servicios', [ServicioController::class, 'store'])->name('servicios.store');
-    Route::get('servicios/{id}/edit', [ServicioController::class, 'edit'])->name('servicios.edit');
-    Route::put('servicios/{id}', [ServicioController::class, 'update'])->name('servicios.update');
-    Route::delete('servicios/{id}', [ServicioController::class, 'destroy'])->name('servicios.destroy');
+    Route::resource('servicios', ServicioController::class)->except(['show']);
     Route::delete('servicios/imagen/{id}', [ServicioController::class, 'eliminarImagen'])->name('servicios.eliminarImagen');
+
+    // Banners CRUD
+    Route::resource('banners', BannerController::class)->except(['show']);
 });
 
 Route::middleware(['auth'])->group(function () {

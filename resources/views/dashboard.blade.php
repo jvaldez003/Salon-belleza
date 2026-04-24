@@ -20,18 +20,15 @@
             </div>
 
             <!-- Stats Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-10">
                 <!-- Total Services -->
                 <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 hover:shadow-xl transition-all group">
                     <div class="flex items-center justify-between mb-4">
                         <div class="p-4 bg-indigo-50 rounded-2xl text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
-                            <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                            </svg>
+                            <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
                         </div>
-                        <span class="text-xs font-bold text-emerald-500 bg-emerald-50 px-3 py-1 rounded-full">+12% este mes</span>
                     </div>
-                    <h3 class="text-slate-500 font-bold uppercase tracking-wider text-xs mb-1">Total Servicios</h3>
+                    <h3 class="text-slate-500 font-bold uppercase tracking-wider text-[10px] mb-1">Total Servicios</h3>
                     <div class="text-4xl font-black text-slate-900">{{ $serviciosCount }}</div>
                 </div>
 
@@ -39,27 +36,33 @@
                 <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 hover:shadow-xl transition-all group">
                     <div class="flex items-center justify-between mb-4">
                         <div class="p-4 bg-violet-50 rounded-2xl text-violet-600 group-hover:bg-violet-600 group-hover:text-white transition-colors">
-                            <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                            </svg>
+                            <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
                         </div>
-                        <span class="text-xs font-bold text-slate-400 bg-slate-50 px-3 py-1 rounded-full">Actualizado hoy</span>
                     </div>
-                    <h3 class="text-slate-500 font-bold uppercase tracking-wider text-xs mb-1">Usuarios Activos</h3>
+                    <h3 class="text-slate-500 font-bold uppercase tracking-wider text-[10px] mb-1">Usuarios Activos</h3>
                     <div class="text-4xl font-black text-slate-900">{{ $usuariosCount }}</div>
+                </div>
+
+                <!-- Banners Info -->
+                <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 hover:shadow-xl transition-all group">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="p-4 bg-pink-50 rounded-2xl text-pink-600 group-hover:bg-pink-600 group-hover:text-white transition-colors">
+                            <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1 1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" /></svg>
+                        </div>
+                    </div>
+                    <h3 class="text-slate-500 font-bold uppercase tracking-wider text-[10px] mb-1">Banner Principal</h3>
+                    <div class="text-xs font-black text-emerald-500 bg-emerald-50 inline-block px-3 py-1 rounded-full">CONFIGURADO</div>
                 </div>
 
                 <!-- Roles Stat -->
                 <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 hover:shadow-xl transition-all group">
                     <div class="flex items-center justify-between mb-4">
-                        <div class="p-4 bg-pink-50 rounded-2xl text-pink-600 group-hover:bg-pink-600 group-hover:text-white transition-colors">
-                            <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                            </svg>
+                        <div class="p-4 bg-slate-50 rounded-2xl text-slate-600 group-hover:bg-slate-900 group-hover:text-white transition-colors">
+                            <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
                         </div>
                     </div>
-                    <h3 class="text-slate-500 font-bold uppercase tracking-wider text-xs mb-1">Rol Actual</h3>
-                    <div class="text-2xl font-black text-slate-900 uppercase">{{ Auth::user()->role }}</div>
+                    <h3 class="text-slate-500 font-bold uppercase tracking-wider text-[10px] mb-1">Rol Actual</h3>
+                    <div class="text-lg font-black text-slate-900 uppercase tracking-tighter">{{ Auth::user()->role }}</div>
                 </div>
             </div>
 
@@ -70,16 +73,25 @@
                         <span class="w-2 h-8 bg-indigo-600 rounded-full mr-4"></span>
                         Accesos Rápidos
                     </h2>
-                    <div class="space-y-4">
-                        <a href="{{ route('servicios.index') }}" class="flex items-center p-4 bg-slate-50 rounded-2xl border border-slate-100 hover:bg-indigo-50 hover:border-indigo-200 transition-all group">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <a href="{{ route('servicios.index') }}" class="flex items-center p-5 bg-slate-50 rounded-2xl border border-slate-100 hover:bg-indigo-50 hover:border-indigo-200 transition-all group">
                             <div class="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center text-indigo-600 mr-4 group-hover:scale-110 transition-transform">
                                 <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
                             </div>
                             <div class="flex-1">
-                                <h4 class="font-bold text-slate-800">Catálogo de Servicios</h4>
-                                <p class="text-xs text-slate-500">Añade, edita o elimina lo que ofreces.</p>
+                                <h4 class="font-bold text-slate-800 text-sm">Servicios</h4>
+                                <p class="text-[10px] text-slate-500">Catálogo beauty</p>
                             </div>
-                            <svg class="w-5 h-5 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                        </a>
+
+                        <a href="{{ route('banners.index') }}" class="flex items-center p-5 bg-slate-50 rounded-2xl border border-slate-100 hover:bg-pink-50 hover:border-pink-200 transition-all group">
+                            <div class="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center text-pink-600 mr-4 group-hover:scale-110 transition-transform">
+                                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5z" /></svg>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="font-bold text-slate-800 text-sm">Banners</h4>
+                                <p class="text-[10px] text-slate-500">Página de inicio</p>
+                            </div>
                         </a>
 
                         @if(Auth::user()->role == 'admin')

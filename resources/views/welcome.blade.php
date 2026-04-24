@@ -1,33 +1,41 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="scroll-smooth">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>Salón de Belleza - Reserva tu Cita</title>
 
         <!-- Fonts -->
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,600&display=swap" rel="stylesheet" />
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
 
         <!-- Scripts & Styles -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+        <style>
+            body { font-family: 'Outfit', sans-serif; }
+            .glass { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); }
+            [x-cloak] { display: none !important; }
+            .hide-scrollbar::-webkit-scrollbar { display: none; }
+            .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        </style>
     </head>
-    <body class="antialiased bg-slate-50">
+    <body class="antialiased bg-slate-50 text-slate-900 selection:bg-indigo-100 selection:text-indigo-700">
         <!-- Navigation -->
-        <nav class="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-slate-200">
+        <nav class="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-slate-100">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex justify-between h-16 items-center">
+                <div class="flex justify-between h-20 items-center">
                     <div class="flex items-center">
-                        <span class="text-2xl font-black text-indigo-600 tracking-tighter">PELUQUERÍA<span class="text-slate-900">APP</span></span>
+                        <span class="text-3xl font-black text-indigo-600 tracking-tighter">PELUQUERÍA<span class="text-slate-900">APP</span></span>
                     </div>
-                    <div class="flex items-center space-x-4">
+                    <div class="flex items-center space-x-6">
                         @if (Route::has('login'))
                             @auth
-                                <a href="{{ url('/dashboard') }}" class="text-sm font-semibold text-slate-700 hover:text-indigo-600 transition">Dashboard</a>
+                                <a href="{{ url('/dashboard') }}" class="text-sm font-bold text-slate-600 hover:text-indigo-600 transition">Dashboard</a>
                             @else
-                                <a href="{{ route('login') }}" class="text-sm font-semibold text-slate-700 hover:text-indigo-600 transition">Entrar</a>
+                                <a href="{{ route('login') }}" class="text-sm font-bold text-slate-600 hover:text-indigo-600 transition">Entrar</a>
                                 @if (Route::has('register'))
-                                    <a href="{{ route('register') }}" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-indigo-700 transition shadow-md shadow-indigo-200">Registrarse</a>
+                                    <a href="{{ route('register') }}" class="bg-indigo-600 text-white px-6 py-3 rounded-2xl text-sm font-black hover:bg-indigo-700 transition shadow-xl shadow-indigo-100 active:scale-95">Registrarse</a>
                                 @endif
                             @endauth
                         @endif
@@ -36,92 +44,110 @@
             </div>
         </nav>
 
-        <!-- Hero Section -->
-        <header class="relative bg-indigo-900 py-24 overflow-hidden">
-            <div class="absolute inset-0 opacity-20">
-                <div class="absolute inset-0" style="background-image: radial-gradient(circle at 2px 2px, white 1px, transparent 0); background-size: 40px 40px;"></div>
-            </div>
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
-                <h1 class="text-4xl sm:text-6xl font-black text-white mb-6 tracking-tight">
-                    Resalta tu Belleza <br><span class="text-indigo-400">Natural</span>
-                </h1>
-                <p class="text-lg text-indigo-100 max-w-2xl mx-auto mb-10 leading-relaxed">
-                    Experimenta el lujo y el cuidado que te mereces. Nuestros expertos están listos para transformar tu look con los mejores servicios de la ciudad.
-                </p>
-                <a href="#servicios" class="inline-block bg-white text-indigo-900 px-8 py-4 rounded-full font-black text-lg hover:bg-indigo-50 transition shadow-xl">
-                    Ver Servicios
-                </a>
-            </div>
-        </header>
+        <!-- Dynamic Hero Banner -->
+        @if($banner)
+            <header class="relative min-h-[70vh] flex items-center overflow-hidden bg-white py-16">
+                <div class="absolute top-0 right-0 w-1/3 h-full bg-indigo-50/50 rounded-l-[5rem] -z-10 translate-x-10"></div>
+                
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                    <div class="space-y-6 text-center lg:text-left">
+                        <h1 class="text-5xl sm:text-6xl font-black text-slate-900 leading-tight tracking-tight">
+                            {{ $banner->titulo }}
+                        </h1>
+                        <p class="text-lg text-slate-500 max-w-xl mx-auto lg:mx-0 font-medium leading-relaxed">
+                            {{ $banner->subtitulo }}
+                        </p>
+                        <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start pt-2">
+                            @if($banner->texto_boton)
+                                <a href="{{ $banner->link_boton ?? '#servicios' }}" class="bg-indigo-600 text-white px-8 py-4 rounded-2xl font-black text-lg hover:bg-indigo-700 transition shadow-lg shadow-indigo-100">
+                                    {{ $banner->texto_boton }}
+                                </a>
+                            @endif
+                        </div>
+                    </div>
 
-        <!-- Services Section -->
-        <main id="servicios" class="py-24">
+                    <div class="relative">
+                        <div class="bg-slate-100 rounded-[3rem] overflow-hidden shadow-2xl">
+                            <img src="{{ asset('storage/' . $banner->imagen_url) }}" class="w-full h-[400px] object-cover">
+                        </div>
+                    </div>
+                </div>
+            </header>
+        @endif
+
+        <!-- Services Section - Minimalist & Compact -->
+        <main id="servicios" class="py-24 bg-slate-50" x-data="{ 
+            scroll: 0,
+            scrollTo(direction) {
+                const container = this.$refs.container;
+                const scrollAmount = 400;
+                container.scrollBy({ left: direction === 'next' ? scrollAmount : -scrollAmount, behavior: 'smooth' });
+            }
+        }">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="text-center mb-16">
-                    <h2 class="text-3xl font-bold text-slate-900 mb-4">Nuestros Servicios</h2>
-                    <p class="text-slate-500 max-w-lg mx-auto">Calidad excepcional en cada detalle. Elige el servicio perfecto para ti.</p>
+                <div class="flex justify-between items-end mb-12">
+                    <div>
+                        <span class="text-indigo-600 font-black uppercase tracking-[0.2em] text-[10px] mb-2 block">Lo que hacemos</span>
+                        <h2 class="text-4xl font-black text-slate-900">Nuestros Servicios</h2>
+                    </div>
+                    <!-- Slider Controls -->
+                    <div class="hidden md:flex space-x-2">
+                        <button @click="scrollTo('prev')" class="p-4 bg-white border border-slate-100 rounded-2xl text-slate-400 hover:text-indigo-600 hover:border-indigo-100 transition shadow-sm">
+                            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+                        </button>
+                        <button @click="scrollTo('next')" class="p-4 bg-white border border-slate-100 rounded-2xl text-slate-400 hover:text-indigo-600 hover:border-indigo-100 transition shadow-sm">
+                            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                        </button>
+                    </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Horizontal Scroll Container -->
+                <div x-ref="container" class="flex overflow-x-auto space-x-8 pb-10 hide-scrollbar snap-x snap-mandatory">
                     @foreach($servicios as $servicio)
-                        <div class="bg-white rounded-3xl overflow-hidden border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-300 group flex flex-col">
-                            <!-- Carousel Section -->
-                            <div class="relative h-64 bg-slate-200 overflow-hidden" x-data="{ active: 0, count: {{ $servicio->imagenes->count() }} }">
-                                @if($servicio->imagenes->count() > 0)
-                                    @foreach($servicio->imagenes as $index => $imagen)
-                                        <div x-show="active === {{ $index }}" 
-                                             x-transition:enter="transition ease-out duration-500"
-                                             x-transition:enter-start="opacity-0 scale-95"
-                                             x-transition:enter-end="opacity-100 scale-100"
-                                             x-transition:leave="transition ease-in duration-300"
-                                             x-transition:leave-start="opacity-100 scale-100"
-                                             x-transition:leave-end="opacity-0 scale-95"
-                                             class="absolute inset-0 flex items-center justify-center bg-slate-50">
-                                            <img src="{{ asset('storage/' . $imagen->url) }}" class="h-full w-full object-contain">
-                                        </div>
-                                    @endforeach
-                                    
-                                    <!-- Controls -->
-                                    <template x-if="count > 1">
-                                        <div class="absolute inset-0 flex items-center justify-between px-4 z-10">
-                                            <button @click="active = active === 0 ? count - 1 : active - 1" class="p-2 bg-white/90 backdrop-blur rounded-full shadow-lg text-slate-900 hover:bg-white transition" aria-label="Anterior">
-                                                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 19l-7-7 7-7" /></svg>
-                                            </button>
-                                            <button @click="active = active === count - 1 ? 0 : active + 1" class="p-2 bg-white/90 backdrop-blur rounded-full shadow-lg text-slate-900 hover:bg-white transition" aria-label="Siguiente">
-                                                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7" /></svg>
-                                            </button>
+                        <div class="flex-none w-[350px] snap-center group">
+                            <div class="bg-white rounded-[2.5rem] overflow-hidden border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-500">
+                                <!-- Card Image with Hover Carousel -->
+                                <div class="relative h-64 bg-slate-100" x-data="{ active: 0, count: {{ $servicio->imagenes->count() }} }">
+                                    <!-- Perfect Fit Image -->
+                                    <template x-for="(img, index) in {{ $servicio->imagenes->map(fn($i) => asset('storage/'.$i->url))->toJson() }}" :key="index">
+                                        <div x-show="active === index" class="absolute inset-0">
+                                            <img :src="img" class="w-full h-full object-cover">
                                         </div>
                                     </template>
-                                    
-                                    <!-- Indicators -->
-                                    <template x-if="count > 1">
-                                        <div class="absolute bottom-4 left-0 right-0 flex justify-center space-x-2 z-10">
-                                            <template x-for="i in count" :key="i">
-                                                <button @click="active = i-1" class="h-1.5 rounded-full transition-all duration-300" :class="active === i-1 ? 'w-6 bg-white shadow-md' : 'w-1.5 bg-white/50'"></button>
-                                            </template>
-                                        </div>
-                                    </template>
-                                @else
-                                    <div class="h-full w-full flex items-center justify-center">
-                                        <svg class="h-12 w-12 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                        </svg>
-                                    </div>
-                                @endif
-                            </div>
 
-                            <div class="p-8 flex-1 flex flex-col">
-                                <h3 class="text-xl font-bold text-slate-900 mb-2">{{ $servicio->nombre }}</h3>
-                                <p class="text-slate-500 text-sm mb-4 line-clamp-3">{{ $servicio->descripcion ?? 'Un servicio excepcional diseñado para tu bienestar.' }}</p>
-                                
-                                <div class="flex items-baseline space-x-1 mt-auto">
-                                    <span class="text-3xl font-black text-indigo-600">${{ number_format($servicio->precio, 0) }}</span>
-                                    <span class="text-slate-400 text-sm font-medium">/ servicio</span>
+                                    @if($servicio->imagenes->count() == 0)
+                                        <div class="absolute inset-0 flex items-center justify-center text-slate-200">
+                                            <svg class="w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                                        </div>
+                                    @endif
+
+                                    <!-- Hover Arrows -->
+                                    <div class="absolute inset-0 flex items-center justify-between px-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+                                        <button @click.stop="active = active === 0 ? count - 1 : active - 1" class="p-2 bg-white/90 backdrop-blur rounded-full text-slate-900 shadow-lg pointer-events-auto hover:bg-indigo-600 hover:text-white transition-colors">
+                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 19l-7-7 7-7" /></svg>
+                                        </button>
+                                        <button @click.stop="active = active === count - 1 ? 0 : active + 1" class="p-2 bg-white/90 backdrop-blur rounded-full text-slate-900 shadow-lg pointer-events-auto hover:bg-indigo-600 hover:text-white transition-colors">
+                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7" /></svg>
+                                        </button>
+                                    </div>
+
+                                    <div class="absolute top-4 left-4 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-black text-slate-900 tracking-widest uppercase shadow-sm">
+                                        Premium
+                                    </div>
                                 </div>
-                                <hr class="my-6 border-slate-100">
-                                <a href="{{ route('login') }}" class="block w-full text-center bg-slate-900 text-white py-4 rounded-2xl font-bold hover:bg-slate-800 transition active:scale-[0.98]">
-                                    Reservar Ahora
-                                </a>
+
+                                <!-- Card Content -->
+                                <div class="p-8">
+                                    <h3 class="text-xl font-black text-slate-900 mb-2 truncate">{{ $servicio->nombre }}</h3>
+                                    <p class="text-slate-500 text-xs font-medium line-clamp-2 mb-6 h-8">{{ $servicio->descripcion ?? 'Tratamiento exclusivo personalizado.' }}</p>
+                                    
+                                    <div class="flex items-center justify-between pt-4 border-t border-slate-50">
+                                        <span class="text-2xl font-black text-indigo-600">${{ number_format($servicio->precio, 0) }}</span>
+                                        <a href="{{ route('login') }}" class="bg-slate-900 text-white text-xs font-bold px-6 py-3 rounded-xl hover:bg-indigo-600 transition shadow-md shadow-slate-100">
+                                            Reservar
+                                        </a>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     @endforeach
@@ -130,10 +156,10 @@
         </main>
 
         <!-- Footer -->
-        <footer class="bg-slate-900 py-12 text-center border-t border-slate-800">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <span class="text-xl font-black text-white tracking-tighter mb-4 block">PELUQUERÍA<span class="text-indigo-400">APP</span></span>
-                <p class="text-slate-400 text-sm">© 2024 Salón de Belleza. Todos los derechos reservados.</p>
+        <footer class="bg-white py-12 border-t border-slate-100">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                <span class="text-2xl font-black text-slate-900 tracking-tighter block mb-2">PELUQUERÍA<span class="text-indigo-600">APP</span></span>
+                <p class="text-slate-400 text-xs font-medium">© 2024 Salón de Belleza. Calidad superior.</p>
             </div>
         </footer>
     </body>
