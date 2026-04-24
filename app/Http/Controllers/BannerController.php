@@ -23,7 +23,7 @@ class BannerController extends Controller
     {
         $request->validate([
             'titulo' => 'required|string|max:255',
-            'imagen' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:10240',
+            'imagen' => 'required|image|mimes:jpeg,png,jpg,webp,svg|max:10240|dimensions:min_width=1200,min_height=600',
             'subtitulo' => 'nullable|string',
         ]);
 
@@ -53,6 +53,7 @@ class BannerController extends Controller
 
         $request->validate([
             'titulo' => 'required|string|max:255',
+            'imagen' => 'nullable|image|mimes:jpeg,png,jpg,webp,svg|max:10240|dimensions:min_width=1200,min_height=600',
         ]);
 
         $data = [

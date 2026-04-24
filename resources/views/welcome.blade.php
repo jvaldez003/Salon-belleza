@@ -103,7 +103,9 @@
 
                         <!-- Right: Full Coverage Image -->
                         <div class="absolute inset-0 lg:left-[40%] lg:right-0 z-10">
-                            <img src="{{ asset('storage/' . $banner->imagen_url) }}" class="w-full h-full object-cover">
+                            <img src="{{ asset('storage/' . $banner->imagen_url) }}" 
+                                 class="w-full h-full object-cover"
+                                 style="image-rendering: high-quality; -webkit-backface-visibility: hidden; backface-visibility: hidden;">
                             <!-- Subtle Gradient Overlay to blend with text area -->
                             <div class="absolute inset-0 bg-gradient-to-r from-slate-900/80 via-transparent to-transparent lg:hidden"></div>
                         </div>
@@ -196,7 +198,7 @@
                                         <span class="text-indigo-600 font-black text-lg">${{ number_format($servicio->precio, 0) }}</span>
                                     </div>
                                     <p class="text-slate-400 text-xs font-medium line-clamp-2 h-8 mb-6">{{ $servicio->descripcion ?? 'Tratamiento premium personalizado.' }}</p>
-                                    <a href="{{ route('login') }}" class="block w-full text-center bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest py-4 rounded-xl hover:bg-indigo-600 transition shadow-lg shadow-slate-100 active:scale-95">
+                                    <a href="javascript:void(0)" class="block w-full text-center bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest py-4 rounded-xl hover:bg-indigo-600 transition shadow-lg shadow-slate-100 active:scale-95">
                                         Agendar Cita
                                     </a>
                                 </div>

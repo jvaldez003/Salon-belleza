@@ -32,37 +32,50 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-// Roles routes for Usuarios
+// Admin Exclusive Routes
 Route::middleware(['auth', 'role:admin'])->group(function () {
-    // Solo administradores
+    // Estadísticas del Sistema
     Route::get('admin', function () {
-        $usersCount = \App\Models\User::count();
-        $serviciosCount = \App\Models\Servicio::count();
-        return view('admin.index', compact('usersCount', 'serviciosCount'));
+        $totalUsuarios = \App\Models\User::count();
+        $totalServicios = \App\Models\Servicio::count();
+        $totalAdmins = \App\Models\User::where('role', 'admin')->count();
+        $totalEditores = \App\Models\User::where('role', 'editor')->count();
+        $totalUsuariosReg = \App\Models\User::where('role', 'usuario')->count();
+        
+        // Distribution for table
+        $distribucion = [
+            'Administradores' => $totalAdmins,
+            'Editores' => $totalEditores,
+            'Usuarios Regulares' => $totalUsuariosReg
+        ];
+
+        return view('admin.index', compact('totalUsuarios', 'totalServicios', 'totalAdmins', 'totalEditores', 'totalUsuariosReg', 'distribucion'));
     })->name('admin.index');
     
+    // Usuario Creation & Deletion
     Route::get('usuario/create', [UsuariosController::class, 'create'])->name('usuario.create');
     Route::post('usuario', [UsuariosController::class, 'store'])->name('usuario.store');
     Route::delete('usuario/{id}', [UsuariosController::class, 'destroy'])->name('usuario.destroy');
-});
 
-Route::middleware(['auth', 'role:admin,editor'])->group(function () {
-    // Administradores y editores
-    Route::get('usuario/{id}/edit', [UsuariosController::class, 'edit'])->name('usuario.edit');
-    Route::put('usuario/{id}', [UsuariosController::class, 'update'])->name('usuario.update');
-    
-    // Servicios CRUD
-    Route::resource('servicios', ServicioController::class)->except(['show']);
+    // Servicios CRUD (Exclusive to Admin as per manual)
+    Route::resource('servicios', ServicioController::class)->except(['show', 'index']);
     Route::delete('servicios/imagen/{id}', [ServicioController::class, 'eliminarImagen'])->name('servicios.eliminarImagen');
 
-    // Banners CRUD
+    // Banners CRUD (Exclusive to Admin)
     Route::resource('banners', BannerController::class)->except(['show']);
 });
 
+// Admin & Editor Shared Routes
+Route::middleware(['auth', 'role:admin,editor'])->group(function () {
+    Route::get('usuario/{id}/edit', [UsuariosController::class, 'edit'])->name('usuario.edit');
+    Route::put('usuario/{id}', [UsuariosController::class, 'update'])->name('usuario.update');
+});
+
+// Public Auth Routes (All Roles)
 Route::middleware(['auth'])->group(function () {
-    // Todos los usuarios autenticados
     Route::get('usuario', [UsuariosController::class, 'index'])->name('usuario.index');
     Route::get('usuario/{id}', [UsuariosController::class, 'show'])->name('usuario.show');
+    Route::get('servicios', [ServicioController::class, 'index'])->name('servicios.index');
 });
 
 require __DIR__.'/auth.php';
