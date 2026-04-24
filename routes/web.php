@@ -14,8 +14,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     $servicios = \App\Models\Servicio::all();
-    $banner = \App\Models\Banner::where('activo', true)->latest()->first();
-    return view('welcome', compact('servicios', 'banner'));
+    $banners = \App\Models\Banner::where('activo', true)->latest()->get();
+    return view('welcome', compact('servicios', 'banners'));
 });
 
 Route::get('/dashboard', function () {
