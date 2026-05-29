@@ -1,19 +1,26 @@
 <?php
 
+use App\Http\Controllers\Api\CitaApiController;
+use App\Http\Controllers\Api\ServicioApiController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
-| API Routes
+| API REST - AppSalon
 |--------------------------------------------------------------------------
-|
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "api" middleware group. Make something great!
-|
+| GET  /api/servicios
+| GET  /api/citas/usuario/{id}  (auth:sanctum)
+| POST /api/citas               (auth:sanctum)
+| PUT  /api/citas/{id}          (auth:sanctum)
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+Route::get('/servicios', [ServicioApiController::class, 'index']);
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/user', fn (Request $request) => $request->user());
+    Route::get('/citas/usuario/{id}', [CitaApiController::class, 'porUsuario']);
+    Route::get('/citas/horarios', [CitaApiController::class, 'horarios']);
+    Route::post('/citas', [CitaApiController::class, 'store']);
+    Route::put('/citas/{cita}', [CitaApiController::class, 'update']);
 });

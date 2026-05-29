@@ -17,11 +17,27 @@ class UsuariosController extends Controller
 {
     /**
      * Muestra la tabla principal de usuarios.
-     * Cualquier usuario autenticado puede entrar aquí (según rutas).
+     * Solo accesible por administradores.
      */
     public function index(Request $request)
     {
-        $users = User::all();
+        $query = User::query();
+
+        if ($request->filled('buscar')) {
+            $buscar = $request->buscar;
+            $query->where(function ($q) use ($buscar) {
+                $q->where('name', 'like', "%{$buscar}%")
+                    ->orWhere('email', 'like', "%{$buscar}%")
+                    ->orWhere('role', 'like', "%{$buscar}%");
+            });
+        }
+
+        if ($request->filled('activo')) {
+            $query->where('activo', $request->activo === '1');
+        }
+
+        $users = $query->orderBy('name')->get();
+
         return view('usuario.index', compact('users'));
     }
 
@@ -51,8 +67,9 @@ class UsuariosController extends Controller
         User::create([
             'name' => $request['name'],
             'email' => $request['email'],
-            'password' => Hash::make($request['password']), // Encriptación de seguridad
+            'password' => Hash::make($request['password']),
             'role' => $request['role'],
+            'email_verified_at' => now(),
         ]);
 
         return redirect('/usuario')->with('success', 'Usuario creado exitosamente');
@@ -71,7 +88,7 @@ class UsuariosController extends Controller
 
     /**
      * Muestra el formulario para editar datos de un usuario.
-     * Accesible por Admin y Editor.
+     * Accesible solo por administradores.
      */
     public function edit($id)
     {
@@ -87,15 +104,22 @@ class UsuariosController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $id, // Ignora el email del usuario actual para la validación de unicidad
-            'password' => 'nullable|min:8', // La contraseña es opcional al editar
+            'email' => 'required|email|unique:users,email,' . $id,
+            'password' => 'nullable|min:8',
             'role' => 'required|in:admin,editor,usuario',
+            'telefono' => 'nullable|string|max:15',
+            'activo' => 'nullable|boolean',
         ]);
 
         $user = User::findOrFail($id);
         $user->name = $request->name;
         $user->email = $request->email;
         $user->role = $request->role;
+        $user->telefono = $request->telefono;
+
+        if ($request->has('activo')) {
+            $user->activo = $request->boolean('activo');
+        }
 
         // Si el campo de contraseña no está vacío, la actualizamos
         if ($request->password) {
@@ -115,5 +139,16 @@ class UsuariosController extends Controller
     {
         User::destroy($id);
         return redirect('/usuario')->with('success', 'Usuario eliminado exitosamente');
+    }
+
+    public function toggleActivo($id)
+    {
+        $user = User::findOrFail($id);
+        $user->activo = ! $user->activo;
+        $user->save();
+
+        $estado = $user->activo ? 'activado' : 'desactivado';
+
+        return redirect()->route('usuario.index')->with('success', "Usuario {$estado} correctamente.");
     }
 }

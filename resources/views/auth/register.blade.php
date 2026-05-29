@@ -45,6 +45,10 @@
             </button>
         </div>
 
+        <p class="text-center text-xs text-slate-400 pt-4 leading-relaxed">
+            Al registrarte recibirás un correo para confirmar tu cuenta antes de acceder al sistema.
+        </p>
+
         <p class="text-center text-sm font-bold text-slate-400 pt-4">
             ¿Ya tienes una cuenta? 
             <a href="{{ route('login') }}" class="text-indigo-600 hover:text-indigo-700">Inicia sesión</a>

@@ -49,6 +49,21 @@
                     </div>
 
                     <div class="space-y-2">
+                        <label for="telefono" class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Teléfono</label>
+                        <input type="text" name="telefono" id="telefono"
+                               class="w-full bg-slate-50 border-none rounded-2xl py-4 px-6 focus:ring-2 focus:ring-indigo-500 transition-all font-bold text-slate-800"
+                               value="{{ old('telefono', $user->telefono) }}">
+                    </div>
+
+                    @admin
+                    <div class="flex items-center space-x-3 p-4 bg-slate-50 rounded-2xl">
+                        <input type="hidden" name="activo" value="0">
+                        <input type="checkbox" name="activo" id="activo" value="1" @checked(old('activo', $user->activo)) class="rounded border-slate-300 text-indigo-600">
+                        <label for="activo" class="font-bold text-slate-700">Cuenta activa</label>
+                    </div>
+                    @endadmin
+
+                    <div class="space-y-2">
                         <label for="role" class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Rol / Nivel de Acceso</label>
                         <select name="role" id="role"
                                 class="w-full bg-slate-50 border-none rounded-2xl py-4 px-6 focus:ring-2 focus:ring-indigo-500 transition-all font-bold text-slate-800 appearance-none cursor-pointer"

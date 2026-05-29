@@ -30,7 +30,8 @@
             <!-- GRILLA DE SECCIONES: Organizada en 3 columnas -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
                 
-                <!-- TARJETA: GESTIÓN DE USUARIOS (Visible para todos) -->
+                <!-- TARJETA: GESTIÓN DE USUARIOS (Solo administrador) -->
+                @admin
                 <a href="{{ route('usuario.index') }}" class="bg-white p-10 rounded-[2.5rem] shadow-sm border border-slate-100 hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 group relative overflow-hidden">
                     <div class="relative z-10">
                         <div class="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400 group-hover:bg-slate-900 group-hover:text-white transition-all duration-500 mb-6 shadow-inner">
@@ -44,6 +45,36 @@
                         </span>
                     </div>
                     <div class="absolute -right-8 -bottom-8 w-24 h-24 bg-slate-50 rounded-full group-hover:scale-150 transition-transform duration-700"></div>
+                </a>
+                @else
+                <a href="{{ route('profile.edit') }}" class="bg-white p-10 rounded-[2.5rem] shadow-sm border border-slate-100 hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 group relative overflow-hidden">
+                    <div class="relative z-10">
+                        <div class="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400 group-hover:bg-slate-900 group-hover:text-white transition-all duration-500 mb-6 shadow-inner">
+                            <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                        </div>
+                        <h3 class="text-2xl font-black text-slate-900 mb-2 italic tracking-tighter">Mi Perfil</h3>
+                        <p class="text-slate-400 text-sm font-medium mb-6">Actualiza tus datos personales y contraseña.</p>
+                        <span class="inline-flex items-center text-indigo-600 font-black text-[10px] uppercase tracking-widest group-hover:translate-x-2 transition-transform">
+                            Editar Perfil
+                            <svg class="w-4 h-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                        </span>
+                    </div>
+                </a>
+                @endadmin
+
+                <!-- TARJETA: MIS CITAS -->
+                <a href="{{ route('citas.index') }}" class="bg-white p-10 rounded-[2.5rem] shadow-sm border border-slate-100 hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 group relative overflow-hidden">
+                    <div class="relative z-10">
+                        <div class="w-16 h-16 bg-violet-50 rounded-2xl flex items-center justify-center text-violet-600 group-hover:bg-violet-600 group-hover:text-white transition-all duration-500 mb-6 shadow-inner">
+                            <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                        </div>
+                        <h3 class="text-2xl font-black text-slate-900 mb-2 italic tracking-tighter">Mis Citas</h3>
+                        <p class="text-slate-400 text-sm font-medium mb-6">Reserva, consulta o cancela tus citas. Hoy hay {{ $citasHoy }} citas en el salón.</p>
+                        <span class="inline-flex items-center text-violet-600 font-black text-[10px] uppercase tracking-widest group-hover:translate-x-2 transition-transform">
+                            Gestionar Citas
+                            <svg class="w-4 h-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                        </span>
+                    </div>
                 </a>
 
                 <!-- TARJETA: CATÁLOGO DE SERVICIOS (Visible para todos) -->

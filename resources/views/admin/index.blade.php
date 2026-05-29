@@ -10,6 +10,21 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             
             <!-- Key Metrics Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm text-center">
+                    <span class="text-[10px] font-black text-violet-400 uppercase tracking-widest mb-2 block">Citas Hoy</span>
+                    <p class="text-4xl font-black text-violet-600">{{ $citasHoy }}</p>
+                </div>
+                <div class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm text-center">
+                    <span class="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-2 block">Ingresos del Mes</span>
+                    <p class="text-3xl font-black text-emerald-600">${{ number_format($ingresosMes, 0) }}</p>
+                </div>
+                <div class="md:col-span-2 flex gap-4">
+                    <a href="{{ route('citas.agenda') }}" class="flex-1 bg-slate-900 text-white rounded-2xl flex items-center justify-center font-black text-xs uppercase tracking-widest hover:bg-indigo-600 transition">Agenda del día</a>
+                    <a href="{{ route('reportes.index') }}" class="flex-1 bg-indigo-600 text-white rounded-2xl flex items-center justify-center font-black text-xs uppercase tracking-widest hover:bg-indigo-700 transition">Reportes</a>
+                </div>
+            </div>
+
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-12">
                 <div class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col items-center text-center">
                     <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Total Usuarios</span>

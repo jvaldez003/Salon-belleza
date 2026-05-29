@@ -1,10 +1,10 @@
-# 📚 Documentación Técnica del Sistema de Peluquería
+# Documentación Técnica del Sistema de Peluquería
 
 Esta documentación detalla el funcionamiento interno del sistema desarrollado con **Laravel 12**, **Tailwind CSS** y **Alpine.js**.
 
 ---
 
-## 🏛️ Arquitectura del Sistema (MVC)
+## Arquitectura del Sistema (MVC)
 
 El sistema sigue el patrón **Modelo-Vista-Controlador**, asegurando que el diseño, la lógica y los datos estén separados y organizados.
 
@@ -28,23 +28,23 @@ Utilizan **Blade** (el motor de plantillas de Laravel) para generar el HTML din�
 
 ---
 
-## 🔐 Seguridad y Roles
+## Seguridad y Roles
 
 El sistema implementa **Middleware** para proteger las rutas:
 - **Admin:** Control total. Puede Crear, Editar y Eliminar todo.
 - **Editor:** Puede ver todo y editar información básica de usuarios, pero no puede borrar nada ni gestionar el catálogo completo.
 - **Usuario:** Solo lectura. Puede ver la información interna pero no tiene botones de acción.
 
-## 📩 Sistema de Correos
+## Sistema de Correos
 Utilizamos **Mailtrap** como entorno de pruebas (Sandbox). Esto permite que el flujo de recuperación de contraseña sea real y seguro, enviando correos con un diseño profesional de Laravel que pueden ser visualizados en el panel de Mailtrap.
 
 ---
 
-## 🚀 Comandos Clave de Mantenimiento
+## Comandos Clave de Mantenimiento
 - `php artisan serve`: Enciende el servidor lógico.
 - `npm run dev`: Compila y actualiza el diseño visual.
 - `php artisan storage:link`: Conecta la carpeta de imágenes con la web.
 - `mysqldump`: Genera el backup de la base de datos para compartir con el equipo.
 
 ---
-*Documentación generada para la entrega final del proyecto de Salón de Belleza.*
+

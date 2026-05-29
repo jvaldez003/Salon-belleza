@@ -18,9 +18,26 @@
                     <x-nav-link :href="route('servicios.index')" :active="request()->routeIs('servicios.*')">
                         {{ __('Servicios') }}
                     </x-nav-link>
+                    <x-nav-link :href="route('citas.index')" :active="request()->routeIs('citas.*')">
+                        {{ __('Citas') }}
+                    </x-nav-link>
+                    <x-nav-link :href="route('citas.calendario')" :active="request()->routeIs('citas.calendario')">
+                        {{ __('Calendario') }}
+                    </x-nav-link>
+                    <x-nav-link :href="route('resenas.historial')" :active="request()->routeIs('resenas.*')">
+                        {{ __('Historial') }}
+                    </x-nav-link>
+                    @admin
+                    <x-nav-link :href="route('resenas.admin')" :active="request()->routeIs('resenas.admin')">
+                        {{ __('Reseñas') }}
+                    </x-nav-link>
                     <x-nav-link :href="route('usuario.index')" :active="request()->routeIs('usuario.*')">
                         {{ __('Usuarios') }}
                     </x-nav-link>
+                    <x-nav-link :href="route('reportes.index')" :active="request()->routeIs('reportes.*')">
+                        {{ __('Reportes') }}
+                    </x-nav-link>
+                    @endadmin
                     <x-nav-link :href="url('/')" class="text-indigo-600 font-black">
                         <svg class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
                         {{ __('Ver Sitio Web') }}

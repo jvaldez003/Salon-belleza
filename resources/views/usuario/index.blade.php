@@ -34,6 +34,22 @@
                     </div>
                 @endif
 
+                <form method="GET" class="mb-8 bg-white p-6 rounded-3xl border border-slate-100 flex flex-wrap gap-4 items-end">
+                    <div>
+                        <label class="text-[10px] font-black uppercase text-slate-400">Buscar</label>
+                        <input type="text" name="buscar" value="{{ request('buscar') }}" class="mt-1 rounded-xl border-slate-200 block" placeholder="Nombre, email, rol">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black uppercase text-slate-400">Estado</label>
+                        <select name="activo" class="mt-1 rounded-xl border-slate-200 block">
+                            <option value="">Todos</option>
+                            <option value="1" @selected(request('activo') === '1')>Activos</option>
+                            <option value="0" @selected(request('activo') === '0')>Inactivos</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="bg-slate-900 text-white px-6 py-2.5 rounded-xl font-bold text-xs uppercase">Filtrar</button>
+                </form>
+
                 <!-- Summary Cards -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
                     <div class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
@@ -110,13 +126,19 @@
                                                     <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
                                                 </button>
                                                 
-                                                @editor
+                                                @admin
                                                     <a href="{{ route('usuario.edit', $user->id) }}" class="p-3 bg-indigo-50 text-indigo-400 hover:bg-indigo-600 hover:text-white rounded-xl transition-all" title="Editar">
                                                         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
                                                     </a>
-                                                @endeditor
+                                                @endadmin
                                                 
                                                 @admin
+                                                    <form action="{{ route('usuario.toggleActivo', $user->id) }}" method="POST" class="inline">
+                                                        @csrf @method('PATCH')
+                                                        <button type="submit" class="p-3 {{ $user->activo ? 'bg-amber-50 text-amber-500' : 'bg-emerald-50 text-emerald-500' }} hover:opacity-80 rounded-xl transition-all" title="{{ $user->activo ? 'Desactivar' : 'Activar' }}">
+                                                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg>
+                                                        </button>
+                                                    </form>
                                                     <button @click="openDelete = true" class="p-3 bg-red-50 text-red-400 hover:bg-red-600 hover:text-white rounded-xl transition-all" title="Eliminar">
                                                         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                                                     </button>

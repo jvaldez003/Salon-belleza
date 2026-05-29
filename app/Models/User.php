@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -14,7 +14,7 @@ use Laravel\Sanctum\HasApiTokens;
  * Gestiona la identidad de los usuarios, sus credenciales y sus niveles de permiso.
  * Implementa la lógica de autenticación base de Laravel Breeze.
  */
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     use HasApiTokens, HasFactory, Notifiable;
 
@@ -23,10 +23,12 @@ class User extends Authenticatable
      * Añadimos 'role' para controlar los permisos de acceso.
      */
     protected $fillable = [
-        'name',     // Nombre completo del usuario
-        'email',    // Correo único de acceso
-        'password', // Contraseña encriptada
-        'role',     // Nivel de acceso: admin, editor, usuario
+        'name',
+        'email',
+        'password',
+        'role',
+        'telefono',
+        'activo',
     ];
 
     /**
@@ -66,6 +68,32 @@ class User extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
-        'password' => 'hashed', // Asegura que la contraseña se maneje siempre como hash
+        'password' => 'hashed',
+        'activo' => 'boolean',
     ];
+
+    public function citas()
+    {
+        return $this->hasMany(Cita::class);
+    }
+
+    public function resenas()
+    {
+        return $this->hasMany(Resena::class);
+    }
+
+    public function isActivo(): bool
+    {
+        return (bool) $this->activo;
+    }
+
+    public function sendEmailVerificationNotification(): void
+    {
+        $this->notify(new \App\Notifications\VerifyEmailNotification);
+    }
+
+    public function sendPasswordResetNotification($token): void
+    {
+        $this->notify(new \App\Notifications\ResetPasswordNotification($token));
+    }
 }

@@ -198,9 +198,15 @@
                                         <span class="text-indigo-600 font-black text-lg">${{ number_format($servicio->precio, 0) }}</span>
                                     </div>
                                     <p class="text-slate-400 text-xs font-medium line-clamp-2 h-8 mb-6">{{ $servicio->descripcion ?? 'Tratamiento premium personalizado.' }}</p>
-                                    <a href="javascript:void(0)" class="block w-full text-center bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest py-4 rounded-xl hover:bg-indigo-600 transition shadow-lg shadow-slate-100 active:scale-95">
+                                    @auth
+                                    <a href="{{ route('citas.create') }}" class="block w-full text-center bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest py-4 rounded-xl hover:bg-indigo-600 transition shadow-lg shadow-slate-100 active:scale-95">
                                         Agendar Cita
                                     </a>
+                                    @else
+                                    <a href="{{ route('login') }}" class="block w-full text-center bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest py-4 rounded-xl hover:bg-indigo-600 transition shadow-lg shadow-slate-100 active:scale-95">
+                                        Agendar Cita
+                                    </a>
+                                    @endauth
                                 </div>
                             </div>
                         </div>

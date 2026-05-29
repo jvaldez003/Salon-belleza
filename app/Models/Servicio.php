@@ -22,7 +22,11 @@ class Servicio extends Model
     public $timestamps = false;
 
     // Campos que se pueden asignar masivamente desde formularios
-    protected $fillable = ['nombre', 'precio', 'descripcion'];
+    protected $fillable = ['nombre', 'precio', 'descripcion', 'duracion', 'activo'];
+
+    protected $casts = [
+        'activo' => 'boolean',
+    ];
 
     /**
      * Relación Uno a Muchos
@@ -33,5 +37,15 @@ class Servicio extends Model
     public function imagenes()
     {
         return $this->hasMany(ServicioImagen::class);
+    }
+
+    public function citas()
+    {
+        return $this->belongsToMany(Cita::class, 'cita_servicio');
+    }
+
+    public function scopeActivos($query)
+    {
+        return $query->where('activo', true);
     }
 }

@@ -14,6 +14,7 @@
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+        @stack('styles')
         <style>
             [x-cloak] { display: none !important; }
             body { font-family: 'Outfit', sans-serif !important; }
@@ -37,5 +38,6 @@
                 {{ $slot }}
             </main>
         </div>
+        @stack('scripts')
     </body>
 </html>
