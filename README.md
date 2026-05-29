@@ -14,15 +14,12 @@ Aplicación web full-stack (Laravel + MySQL + Blade) para que clientes reserven 
 
 ## Funcionalidades implementadas
 
-### Entrega intermedia
 - Base de datos relacional: `users`, `servicios`, `citas`, `cita_servicio`
 - Autenticación: registro, login/logout, recuperación de contraseña, verificación de email
 - CRUD de servicios (solo admin)
 - Catálogo público de servicios
 - Roles: `admin`, `editor`, `usuario`
 - Interfaz responsive con mensajes flash
-
-### Entrega final
 - **Citas:** reserva con calendario interactivo (FullCalendar), múltiples servicios, validación de disponibilidad, cancelación/edición, email de confirmación
 - **Admin:** dashboard con citas del día e ingresos, agenda diaria/semanal, activar/desactivar usuarios, filtros
 - **API REST:** `GET /api/servicios`, `GET/POST/PUT` citas con Sanctum
