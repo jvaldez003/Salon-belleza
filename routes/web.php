@@ -1,12 +1,17 @@
 <?php
 
+use App\Http\Controllers\ConfiguracionSitioController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ServicioController;
 use App\Http\Controllers\UsuariosController;
 use App\Http\Controllers\BannerController;
 use App\Http\Controllers\CitaController;
+use App\Http\Controllers\EmpleadoController;
+use App\Http\Controllers\HorarioController;
 use App\Http\Controllers\ReporteController;
 use App\Http\Controllers\ResenaController;
+use App\Http\Controllers\CategoriaController;
+use App\Http\Controllers\ProtocoloController;
 
 use Illuminate\Support\Facades\Route;
 
@@ -15,11 +20,14 @@ use Illuminate\Support\Facades\Route;
     Este archivo define todas las rutas de la aplicación y sus permisos.
 */
 
-// PÁGINA DE INICIO: Carga banners y servicios para el público.
+// PÁGINA DE INICIO: Carga banners, servicios, categorías, protocolos e imágenes de sección.
 Route::get('/', function () {
-    $servicios = \App\Models\Servicio::activos()->with('imagenes')->get();
-    $banners = \App\Models\Banner::where('activo', true)->latest()->get();
-    return view('welcome', compact('servicios', 'banners'));
+    $categorias     = \App\Models\Categoria::activas()->get();
+    $servicios      = \App\Models\Servicio::activos()->with(['imagenes', 'categoria'])->get();
+    $banners        = \App\Models\Banner::where('activo', true)->latest()->get();
+    $seccionImagenes = \App\Models\SeccionImagen::orderBy('orden')->get()->groupBy('seccion');
+    $protocolos     = \App\Models\Protocolo::activos()->with('medios')->get();
+    return view('welcome', compact('servicios', 'banners', 'seccionImagenes', 'categorias', 'protocolos'));
 });
 
 // DASHBOARD: Resumen informativo después de iniciar sesión.
@@ -81,6 +89,16 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('resenas/admin', [ResenaController::class, 'adminIndex'])->name('resenas.admin');
 
     Route::get('citas/horarios-salon', [CitaController::class, 'horariosSalon'])->name('citas.horarios.salon');
+
+    Route::get('horarios', [HorarioController::class, 'index'])->name('horarios.index');
+    Route::put('horarios', [HorarioController::class, 'update'])->name('horarios.update');
+
+    Route::get('configuracion', [ConfiguracionSitioController::class, 'edit'])->name('configuracion.edit');
+    Route::put('configuracion', [ConfiguracionSitioController::class, 'update'])->name('configuracion.update');
+    Route::post('configuracion/imagenes', [ConfiguracionSitioController::class, 'storeImagen'])->name('configuracion.imagenes.store');
+    Route::delete('configuracion/imagenes/{imagen}', [ConfiguracionSitioController::class, 'destroyImagen'])->name('configuracion.imagenes.destroy');
+
+    Route::resource('empleados', EmpleadoController::class)->except(['show']);
     Route::patch('usuario/{id}/activo', [UsuariosController::class, 'toggleActivo'])->name('usuario.toggleActivo');
 
     // Gestión de Usuarios (Admin solamente).
@@ -95,6 +113,19 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     // Gestión de Catálogo de Servicios (Admin solamente).
     Route::resource('servicios', ServicioController::class)->except(['show', 'index']);
     Route::delete('servicios/imagen/{id}', [ServicioController::class, 'eliminarImagen'])->name('servicios.eliminarImagen');
+
+    // Categorías de servicios.
+    Route::get('categorias', [CategoriaController::class, 'index'])->name('categorias.index');
+    Route::post('categorias', [CategoriaController::class, 'store'])->name('categorias.store');
+    Route::put('categorias/{categoria}', [CategoriaController::class, 'update'])->name('categorias.update');
+    Route::delete('categorias/{categoria}', [CategoriaController::class, 'destroy'])->name('categorias.destroy');
+    Route::post('categorias/{categoria}/imagen', [CategoriaController::class, 'storeImagen'])->name('categorias.imagen.store');
+    Route::delete('categorias/{categoria}/imagen', [CategoriaController::class, 'destroyImagen'])->name('categorias.imagen.destroy');
+
+    // Protocolos de tratamiento.
+    Route::resource('protocolos', ProtocoloController::class);
+    Route::post('protocolos/{protocolo}/medios', [ProtocoloController::class, 'storeMedio'])->name('protocolos.medios.store');
+    Route::delete('protocolos/medios/{medio}', [ProtocoloController::class, 'destroyMedio'])->name('protocolos.medios.destroy');
 
     // Gestión de Banners (Admin solamente).
     Route::resource('banners', BannerController::class)->except(['show']);

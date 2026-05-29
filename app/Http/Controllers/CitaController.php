@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\CitaRequest;
 use App\Models\Cita;
+use App\Models\Horario;
 use App\Models\Servicio;
 use App\Models\User;
 use App\Notifications\CitaConfirmadaNotification;
@@ -136,7 +137,7 @@ class CitaController extends Controller
 
     public function create()
     {
-        $servicios = Servicio::activos()->orderBy('nombre')->get();
+        $servicios = Servicio::activos()->with('empleados')->orderBy('nombre')->get();
 
         return view('citas.create', compact('servicios'));
     }
@@ -153,15 +154,15 @@ class CitaController extends Controller
         }
 
         $cita = Cita::create([
-            'fecha' => $request->fecha,
-            'hora' => $request->hora,
+            'fecha'   => $request->fecha,
+            'hora'    => $request->hora,
             'user_id' => $userId,
-            'total' => $this->disponibilidad->calcularTotal($servicioIds),
-            'estado' => $request->estado ?? 'pendiente',
-            'notas' => $request->notas,
+            'total'   => $this->disponibilidad->calcularTotal($servicioIds),
+            'estado'  => $request->estado ?? 'pendiente',
+            'notas'   => $request->notas,
         ]);
 
-        $cita->servicios()->sync($servicioIds);
+        $cita->servicios()->sync($this->buildPivot($servicioIds, $request->input('empleados', [])));
         $cita->load('servicios', 'usuario');
 
         $cita->usuario?->notify(new CitaConfirmadaNotification($cita));
@@ -180,7 +181,7 @@ class CitaController extends Controller
     public function edit(Cita $cita)
     {
         $this->autorizarAcceso($cita);
-        $servicios = Servicio::activos()->orderBy('nombre')->get();
+        $servicios = Servicio::activos()->with('empleados')->orderBy('nombre')->get();
         $cita->load('servicios');
 
         return view('citas.edit', compact('cita', 'servicios'));
@@ -202,14 +203,14 @@ class CitaController extends Controller
         }
 
         $cita->update([
-            'fecha' => $request->fecha,
-            'hora' => $request->hora,
-            'total' => $this->disponibilidad->calcularTotal($servicioIds),
+            'fecha'  => $request->fecha,
+            'hora'   => $request->hora,
+            'total'  => $this->disponibilidad->calcularTotal($servicioIds),
             'estado' => $estado,
-            'notas' => $request->notas,
+            'notas'  => $request->notas,
         ]);
 
-        $cita->servicios()->sync($servicioIds);
+        $cita->servicios()->sync($this->buildPivot($servicioIds, $request->input('empleados', [])));
 
         return redirect()->route('citas.index')->with('success', 'Cita actualizada correctamente.');
     }
@@ -225,21 +226,36 @@ class CitaController extends Controller
     public function horariosDisponibles(Request $request)
     {
         $request->validate([
-            'fecha' => 'required|date',
-            'cita_id' => 'nullable|integer',
+            'fecha'    => 'required|date',
+            'cita_id'  => 'nullable|integer',
+            'empleados' => 'nullable|array',
         ]);
 
         $dia = \Carbon\Carbon::parse($request->fecha);
-        $esLaboral = in_array($dia->dayOfWeekIso, config('salon.dias_laborales', [1, 2, 3, 4, 5, 6]));
+        $horario = Horario::delDia($dia->dayOfWeekIso);
+        $esLaboral = $horario && $horario->activo;
+
+        // Extraer IDs únicos de empleados seleccionados (valores no vacíos)
+        $empleadoIds = collect($request->input('empleados', []))
+            ->filter()
+            ->map(fn($id) => (int) $id)
+            ->unique()
+            ->values()
+            ->toArray();
 
         $slots = $this->disponibilidad->slotsDisponibles(
             $request->fecha,
-            $request->cita_id
+            $request->cita_id,
+            $empleadoIds
         );
 
         $mensaje = null;
         if (! $esLaboral) {
-            $mensaje = 'El salón no atiende los domingos.';
+            $mensaje = 'El salón no atiende este día.';
+        } elseif (! empty($empleadoIds) && empty($slots)) {
+            $mensaje = $dia->isToday()
+                ? 'El empleado no tiene horarios disponibles hoy.'
+                : 'El empleado no tiene disponibilidad este día.';
         } elseif (empty($slots)) {
             $mensaje = $dia->isToday()
                 ? 'No quedan horarios disponibles para hoy. Prueba otro día.'
@@ -247,17 +263,27 @@ class CitaController extends Controller
         }
 
         return response()->json([
-            'slots' => $slots,
-            'cerrado' => ! $esLaboral,
-            'mensaje' => $mensaje,
+            'slots'    => $slots,
+            'cerrado'  => ! $esLaboral,
+            'mensaje'  => $mensaje,
         ]);
     }
 
     public function horariosSalon()
     {
-        return view('citas.horarios', [
-            'config' => config('salon'),
-        ]);
+        return redirect()->route('horarios.index');
+    }
+
+    protected function buildPivot(array $servicioIds, array $empleadosInput): array
+    {
+        $pivot = [];
+        foreach ($servicioIds as $sid) {
+            $eid = isset($empleadosInput[$sid]) && $empleadosInput[$sid] !== ''
+                ? (int) $empleadosInput[$sid]
+                : null;
+            $pivot[(int) $sid] = ['empleado_id' => $eid];
+        }
+        return $pivot;
     }
 
     protected function autorizarAcceso(Cita $cita): void

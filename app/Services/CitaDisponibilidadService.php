@@ -3,24 +3,55 @@
 namespace App\Services;
 
 use App\Models\Cita;
+use App\Models\Horario;
+use App\Models\HorarioEmpleado;
 use App\Models\Servicio;
 use Carbon\Carbon;
 
 class CitaDisponibilidadService
 {
-    public function slotsDisponibles(string $fecha, ?int $excluirCitaId = null): array
+    /**
+     * Genera los slots disponibles para una fecha.
+     * Si se pasan $empleadoIds, los slots se calculan dentro del horario
+     * de CADA empleado (intersección) y excluyendo sus citas existentes.
+     */
+    public function slotsDisponibles(string $fecha, ?int $excluirCitaId = null, array $empleadoIds = []): array
     {
-        $dia = Carbon::parse($fecha);
-        if (! in_array($dia->dayOfWeekIso, config('salon.dias_laborales', [1, 2, 3, 4, 5, 6]))) {
+        $dia     = Carbon::parse($fecha);
+        $horario = Horario::delDia($dia->dayOfWeekIso);
+
+        if (! $horario || ! $horario->activo) {
             return [];
         }
 
-        $apertura = Carbon::parse($fecha.' '.config('salon.hora_apertura'));
-        $cierre = Carbon::parse($fecha.' '.config('salon.hora_cierre'));
+        $apertura  = Carbon::parse($fecha.' '.$horario->hora_apertura);
+        $cierre    = Carbon::parse($fecha.' '.$horario->hora_cierre);
         $intervalo = config('salon.intervalo_minutos', 30);
 
-        $ocupados = $this->bloquesOcupados($fecha, $excluirCitaId);
-        $slots = [];
+        // Restringir la ventana al horario de los empleados seleccionados
+        foreach ($empleadoIds as $empleadoId) {
+            $he = HorarioEmpleado::where('empleado_id', $empleadoId)
+                ->where('dia', $dia->dayOfWeekIso)
+                ->first();
+
+            if (! $he || ! $he->activo) {
+                return []; // Este empleado no trabaja este día
+            }
+
+            $aperEmp    = Carbon::parse($fecha.' '.$he->hora_apertura);
+            $cierreEmp  = Carbon::parse($fecha.' '.$he->hora_cierre);
+
+            // Intersección: tomamos la ventana más restrictiva
+            if ($aperEmp->gt($apertura)) $apertura = $aperEmp;
+            if ($cierreEmp->lt($cierre))  $cierre   = $cierreEmp;
+        }
+
+        if ($apertura->gte($cierre)) {
+            return [];
+        }
+
+        $ocupados = $this->bloquesOcupados($fecha, $excluirCitaId, $empleadoIds);
+        $slots    = [];
 
         for ($slot = $apertura->copy(); $slot->lt($cierre); $slot->addMinutes($intervalo)) {
             $finSlot = $slot->copy()->addMinutes($intervalo);
@@ -44,20 +75,44 @@ class CitaDisponibilidadService
         return $slots;
     }
 
-    public function hayDisponibilidad(string $fecha, string $hora, array $servicioIds, ?int $excluirCitaId = null): bool
+    public function hayDisponibilidad(string $fecha, string $hora, array $servicioIds, ?int $excluirCitaId = null, array $empleadoIds = []): bool
     {
         $duracion = Servicio::whereIn('id', $servicioIds)->sum('duracion') ?: 60;
-        $inicio = Carbon::parse($fecha.' '.$hora);
-        $fin = $inicio->copy()->addMinutes($duracion);
+        $inicio   = Carbon::parse($fecha.' '.$hora);
+        $fin      = $inicio->copy()->addMinutes($duracion);
 
-        $apertura = Carbon::parse($fecha.' '.config('salon.hora_apertura'));
-        $cierre = Carbon::parse($fecha.' '.config('salon.hora_cierre'));
+        $diaIso  = Carbon::parse($fecha)->dayOfWeekIso;
+        $horario = Horario::delDia($diaIso);
+
+        if (! $horario || ! $horario->activo) {
+            return false;
+        }
+
+        $apertura = Carbon::parse($fecha.' '.$horario->hora_apertura);
+        $cierre   = Carbon::parse($fecha.' '.$horario->hora_cierre);
+
+        // Verificar ventana de empleados
+        foreach ($empleadoIds as $empleadoId) {
+            $he = HorarioEmpleado::where('empleado_id', $empleadoId)
+                ->where('dia', $diaIso)
+                ->first();
+
+            if (! $he || ! $he->activo) {
+                return false;
+            }
+
+            $aperEmp   = Carbon::parse($fecha.' '.$he->hora_apertura);
+            $cierreEmp = Carbon::parse($fecha.' '.$he->hora_cierre);
+
+            if ($aperEmp->gt($apertura)) $apertura = $aperEmp;
+            if ($cierreEmp->lt($cierre))  $cierre   = $cierreEmp;
+        }
 
         if ($inicio->lt($apertura) || $fin->gt($cierre) || $inicio->lt(now())) {
             return false;
         }
 
-        foreach ($this->bloquesOcupados($fecha, $excluirCitaId) as $bloque) {
+        foreach ($this->bloquesOcupados($fecha, $excluirCitaId, $empleadoIds) as $bloque) {
             if ($this->seSolapan($inicio, $fin, $bloque['inicio'], $bloque['fin'])) {
                 return false;
             }
@@ -71,7 +126,12 @@ class CitaDisponibilidadService
         return (float) Servicio::whereIn('id', $servicioIds)->sum('precio');
     }
 
-    protected function bloquesOcupados(string $fecha, ?int $excluirCitaId = null): array
+    /**
+     * Devuelve los bloques ocupados.
+     * Si hay empleadoIds, solo considera citas que involucran esos empleados,
+     * lo que permite citas simultáneas con diferentes empleados.
+     */
+    protected function bloquesOcupados(string $fecha, ?int $excluirCitaId = null, array $empleadoIds = []): array
     {
         $query = Cita::with('servicios')
             ->activas()
@@ -81,10 +141,17 @@ class CitaDisponibilidadService
             $query->where('id', '!=', $excluirCitaId);
         }
 
+        if (! empty($empleadoIds)) {
+            // Solo bloquear slots donde alguno de estos empleados ya está ocupado
+            $query->whereHas('servicios', function ($q) use ($empleadoIds) {
+                $q->whereIn('cita_servicio.empleado_id', $empleadoIds);
+            });
+        }
+
         return $query->get()->map(function (Cita $cita) {
             return [
                 'inicio' => $cita->horaInicio(),
-                'fin' => $cita->horaFin(),
+                'fin'    => $cita->horaFin(),
             ];
         })->all();
     }

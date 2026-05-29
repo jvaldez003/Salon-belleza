@@ -65,6 +65,18 @@
                         </div>
                     </div>
 
+                    <!-- Categoría -->
+                    <div class="space-y-2">
+                        <label for="categoria_id" class="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Categoría</label>
+                        <select name="categoria_id" id="categoria_id"
+                                class="w-full bg-slate-50 border-none rounded-2xl py-4 px-6 focus:ring-2 focus:ring-indigo-500 transition-all font-bold text-slate-700">
+                            <option value="">Sin categoría</option>
+                            @foreach($categorias as $cat)
+                            <option value="{{ $cat->id }}" {{ $servicio->categoria_id == $cat->id ? 'selected' : '' }}>{{ $cat->nombre }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
                     <!-- Descripción -->
                     <div class="space-y-2">
                         <label for="descripcion" class="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Descripción Detallada</label>

@@ -20,7 +20,7 @@
                         <!-- Nombre -->
                         <div class="space-y-2">
                             <label for="nombre" class="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Nombre del Servicio</label>
-                            <input type="text" name="nombre" id="nombre" placeholder="Ej: Corte de Cabello Dama"
+                            <input type="text" name="nombre" id="nombre" placeholder="Ej: Diseño de Cejas"
                                    class="w-full bg-slate-50 border-none rounded-2xl py-4 px-6 focus:ring-2 focus:ring-indigo-500 transition-all font-bold text-slate-800" required>
                             @error('nombre') <p class="text-red-500 text-xs font-bold mt-1 ml-1">{{ $message }}</p> @enderror
                         </div>
@@ -32,6 +32,23 @@
                                    class="w-full bg-slate-50 border-none rounded-2xl py-4 px-6 focus:ring-2 focus:ring-indigo-500 transition-all font-bold text-indigo-600 text-xl" required>
                             @error('precio') <p class="text-red-500 text-xs font-bold mt-1 ml-1">{{ $message }}</p> @enderror
                         </div>
+                    </div>
+
+                    <!-- Categoría -->
+                    <div class="space-y-2">
+                        <label for="categoria_id" class="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Categoría</label>
+                        <select name="categoria_id" id="categoria_id"
+                                class="w-full bg-slate-50 border-none rounded-2xl py-4 px-6 focus:ring-2 focus:ring-indigo-500 transition-all font-bold text-slate-700">
+                            <option value="">Sin categoría</option>
+                            @foreach($categorias as $cat)
+                            <option value="{{ $cat->id }}" {{ old('categoria_id') == $cat->id ? 'selected' : '' }}>{{ $cat->nombre }}</option>
+                            @endforeach
+                        </select>
+                        @if($categorias->isEmpty())
+                        <p class="text-xs text-slate-400 ml-1">
+                            <a href="{{ route('categorias.index') }}" class="underline hover:text-indigo-500">Crear categorías primero →</a>
+                        </p>
+                        @endif
                     </div>
 
                     <!-- Descripción -->

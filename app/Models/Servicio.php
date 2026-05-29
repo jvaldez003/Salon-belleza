@@ -22,7 +22,7 @@ class Servicio extends Model
     public $timestamps = false;
 
     // Campos que se pueden asignar masivamente desde formularios
-    protected $fillable = ['nombre', 'precio', 'descripcion', 'duracion', 'activo'];
+    protected $fillable = ['nombre', 'precio', 'descripcion', 'duracion', 'activo', 'categoria_id'];
 
     protected $casts = [
         'activo' => 'boolean',
@@ -34,6 +34,11 @@ class Servicio extends Model
      * Un servicio puede tener varias imágenes (carrusel).
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
+    public function categoria()
+    {
+        return $this->belongsTo(Categoria::class);
+    }
+
     public function imagenes()
     {
         return $this->hasMany(ServicioImagen::class);
@@ -42,6 +47,11 @@ class Servicio extends Model
     public function citas()
     {
         return $this->belongsToMany(Cita::class, 'cita_servicio');
+    }
+
+    public function empleados()
+    {
+        return $this->belongsToMany(Empleado::class, 'empleado_servicio');
     }
 
     public function scopeActivos($query)

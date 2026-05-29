@@ -23,6 +23,11 @@
     @endpush
 @endonce
 
+@php
+    $diasLaboralesConfig = \App\Models\Horario::where('activo', true)->pluck('dia')->toArray();
+    $fechaInicialCalendario = $fechaInicial ?? now()->format('Y-m-d');
+@endphp
+
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function () {
@@ -30,8 +35,8 @@ document.addEventListener('DOMContentLoaded', function () {
     if (!el || el.dataset.initialized) return;
     el.dataset.initialized = '1';
 
-    const diasLaborales = @json(config('salon.dias_laborales', [1, 2, 3, 4, 5, 6]));
-    let fechaSeleccionada = @json($fechaInicial ?? now()->format('Y-m-d'));
+    const diasLaborales = @json($diasLaboralesConfig);
+    let fechaSeleccionada = @json($fechaInicialCalendario);
 
     const cal = new FullCalendar.Calendar(el, {
         locale: 'es',
