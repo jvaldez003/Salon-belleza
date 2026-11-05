@@ -55,8 +55,8 @@
              @if ($prioridad) fetchpriority="high" @else loading="lazy" decoding="async" @endif>
     @else
         <div class="foto-respaldo" @if ($alt) role="img" aria-label="{{ $alt }}" @else aria-hidden="true" @endif>
-            <span class="font-display text-7xl text-oceano/80 leading-none">{{ mb_strtoupper(mb_substr($inicial ?: 'A', 0, 1)) }}</span>
-            <span class="absolute bottom-3 inset-x-0 text-center font-display italic text-sm tracking-[.12em] text-oceano">Arrecife</span>
+            <span class="foto-respaldo-letra font-display text-oceano/80 leading-none">{{ mb_strtoupper(mb_substr($inicial ?: 'A', 0, 1)) }}</span>
+            <span class="foto-respaldo-firma absolute bottom-[6%] inset-x-0 text-center font-display italic tracking-[.12em] text-oceano">Arrecife</span>
         </div>
     @endif
     {{ $slot }}

@@ -120,8 +120,13 @@
         @apply absolute inset-x-0 bottom-0 pt-16 pb-5 px-5 text-white;
         background: linear-gradient(180deg, transparent, rgb(10 47 107 / .85));
     }
-    /* Respaldo de marca cuando no hay foto */
+    /* Respaldo de marca cuando no hay foto. La letra se escala con el tamaño del marco
+       (unidades cqw) y la firma "Arrecife" se oculta en marcos pequeños (miniaturas). */
+    .foto-respaldo-letra { font-size: 42cqw; }
+    .foto-respaldo-firma { font-size: clamp(.65rem, 7cqw, .875rem); }
+    @container (max-width: 9rem) { .foto-respaldo-firma { display: none; } }
     .foto-respaldo {
+        container-type: inline-size;
         @apply absolute inset-0 grid place-items-center;
         background:
             radial-gradient(120% 80% at 20% 0%, rgb(127 216 255 / .55), transparent 60%),

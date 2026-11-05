@@ -1,117 +1,102 @@
-<x-app-layout>
+{{--
+    Categorías de servicios (admin).
+    Fotos de cada categoría en el inicio del sitio:
+      foto 1 → tarjeta del selector de categorías (4:5)
+      foto 2 → foto grande de la carta de precios (si no hay, se usa la foto 1)
+--}}
+<x-app-layout titulo="Categorías">
     <x-slot name="header">
-        <div class="flex items-center justify-between">
-            <div>
-                <h1 class="font-black text-3xl text-warm-900">Categorías de Servicios</h1>
-                <p class="text-warm-400 text-sm mt-1">Organiza los servicios en categorías para facilitar la navegación.</p>
-            </div>
-            <a href="{{ route('servicios.index') }}" class="text-sm font-bold text-warm-500 hover:text-warm-900 transition">← Volver a Servicios</a>
+        <div class="grid gap-3">
+            <a href="{{ route('servicios.index') }}" class="inline-flex items-center gap-1.5 text-sm font-medium text-texto hover:text-oceano w-fit">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+                Servicios
+            </a>
+            <h1 class="text-[clamp(2rem,1.5rem+2vw,3rem)] leading-none">Categorías</h1>
+            <p class="text-texto-suave max-w-[60ch]">Agrupan los servicios en el sitio y en la reserva. Solo aparecen en el sitio las categorías que tienen servicios.</p>
         </div>
     </x-slot>
 
-    <div class="py-12 bg-cream min-h-screen">
-        <div class="max-w-2xl mx-auto sm:px-6 lg:px-8 space-y-6">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 py-8 md:py-10 grid gap-6">
+        <x-aviso />
+        @if ($errors->any())
+            <div class="alert-error" role="alert">{{ $errors->first() }}</div>
+        @endif
 
-            @if(session('success'))
-            <div class="alert-success">
-                <svg class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                <span class="font-bold">{{ session('success') }}</span>
+        <form method="POST" action="{{ route('categorias.store') }}" class="card p-6 flex flex-wrap items-end gap-3">
+            @csrf
+            <div class="grid gap-1.5 flex-1 min-w-[14rem]">
+                <label for="nueva-categoria" class="label">Nueva categoría</label>
+                <input id="nueva-categoria" type="text" name="nombre" value="{{ old('nombre') }}" maxlength="80" required class="form-input" placeholder="Ej.: Uñas">
             </div>
-            @endif
+            <button type="submit" class="btn-primary">Agregar</button>
+        </form>
 
-            {{-- Nueva categoría --}}
-            <div class="bg-white rounded-[2.5rem] p-8 shadow-sm border border-warm-200">
-                <h2 class="font-black text-lg text-warm-900 mb-5">Nueva categoría</h2>
-                <form method="POST" action="{{ route('categorias.store') }}" class="flex gap-3">
-                    @csrf
-                    <input type="text" name="nombre" placeholder="Ej: Cejas, Pestañas, Uñas…"
-                           class="flex-1 bg-cream border-0 rounded-2xl py-3 px-5 font-bold text-warm-800 focus:ring-2 focus:ring-rose-primary"
-                           required maxlength="80" value="{{ old('nombre') }}">
-                    @error('nombre')<p class="text-red-500 text-xs font-bold mt-1">{{ $message }}</p>@enderror
-                    <button type="submit"
-                            class="bg-rose-primary hover:bg-rose-dark text-white font-black px-6 py-3 rounded-2xl transition active:scale-95 shrink-0">
-                        Agregar
-                    </button>
-                </form>
-            </div>
+        @forelse ($categorias as $cat)
+            @php
+                $nombre = Str::legible($cat->nombre);
+                $cuantos = $cat->servicios()->count();
+                $fotos = $cat->imagenes;
+            @endphp
+            <article class="card overflow-hidden" x-data="{ abierta: false, editando: false }" aria-labelledby="cat-{{ $cat->id }}">
+                <div class="flex flex-wrap items-center gap-4 p-4 sm:p-5">
+                    <x-foto :src="optional($fotos->first())->url ?: $cat->imagen" proporcion="4/5" :inicial="$nombre" class="w-14 shrink-0 !rounded-xl" />
 
-            {{-- Lista de categorías --}}
-            <div class="bg-white rounded-[2.5rem] shadow-sm border border-warm-200 overflow-hidden">
-                <div class="px-8 py-5 border-b border-warm-100 flex items-center justify-between">
-                    <h2 class="font-black text-lg text-warm-900">Categorías existentes</h2>
-                    <span class="text-xs font-black uppercase tracking-widest px-3 py-1 bg-rose-light/20 text-rose-deeper rounded-full">
-                        {{ $categorias->count() }} total
-                    </span>
-                </div>
-
-                @forelse($categorias as $cat)
-                <div class="px-6 py-5 border-b border-warm-100 last:border-0 flex items-center gap-4 group hover:bg-cream transition"
-                     x-data="{ editing: false }">
-
-                    {{-- Galería de imágenes de la categoría --}}
-                    <div class="shrink-0 flex items-center gap-1.5">
-                        @foreach($cat->imagenes as $img)
-                        <div class="relative w-14 h-14 rounded-xl overflow-hidden group/img border border-warm-100">
-                            <img src="{{ asset('storage/'.$img->url) }}" class="w-full h-full object-cover">
-                            <form method="POST" action="{{ route('categorias.imagen.destroy', $img) }}"
-                                  class="absolute inset-0 opacity-0 group-hover/img:opacity-100 transition flex items-center justify-center bg-black/50">
-                                @csrf @method('DELETE')
-                                <button type="submit" title="Eliminar"
-                                        class="w-6 h-6 bg-white text-red-500 rounded-full flex items-center justify-center text-xs font-black hover:bg-red-500 hover:text-white transition">✕</button>
-                            </form>
-                        </div>
-                        @endforeach
-                        {{-- Botón añadir imagen --}}
-                        <form method="POST" action="{{ route('categorias.imagen.store', $cat) }}"
-                              enctype="multipart/form-data" id="img-form-{{ $cat->id }}">
-                            @csrf
-                            <label for="img-{{ $cat->id }}"
-                                   class="w-14 h-14 flex flex-col items-center justify-center cursor-pointer rounded-xl border-2 border-dashed border-warm-200 text-warm-400 hover:border-rose-primary hover:text-rose-primary transition">
-                                <svg class="w-4 h-4 mb-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                                <span class="text-[8px] font-black uppercase tracking-widest leading-none">Foto</span>
-                            </label>
-                            <input type="file" id="img-{{ $cat->id }}" name="imagen" accept="image/*" class="hidden"
-                                   onchange="document.getElementById('img-form-{{ $cat->id }}').submit()">
+                    <div class="flex-1 min-w-[10rem]">
+                        <h2 id="cat-{{ $cat->id }}" x-show="!editando" class="font-sans font-semibold text-lg text-tinta">{{ $nombre }}</h2>
+                        <form x-show="editando" x-cloak method="POST" action="{{ route('categorias.update', $cat) }}" class="flex flex-wrap items-center gap-2">
+                            @csrf @method('PUT')
+                            <label for="nombre-{{ $cat->id }}" class="sr-only">Nombre de la categoría</label>
+                            <input id="nombre-{{ $cat->id }}" type="text" name="nombre" value="{{ $cat->nombre }}" maxlength="80" required class="form-input py-2 flex-1 min-w-[10rem]">
+                            <button type="submit" class="btn-primary !min-h-[40px]">Guardar</button>
+                            <button type="button" @click="editando = false" class="text-sm text-texto hover:text-oceano">Cancelar</button>
                         </form>
+                        <p class="text-sm text-texto-suave">
+                            {{ $cuantos }} {{ $cuantos === 1 ? 'servicio' : 'servicios' }} · {{ $fotos->count() }} {{ $fotos->count() === 1 ? 'foto' : 'fotos' }}
+                        </p>
                     </div>
 
-                    {{-- Inline edit nombre --}}
-                    <form method="POST" action="{{ route('categorias.update', $cat) }}" class="flex-1 flex items-center gap-3">
-                        @csrf @method('PUT')
-                        <input type="text" name="nombre"
-                               :readonly="!editing"
-                               :class="editing ? 'bg-cream border-rose-primary ring-2 ring-rose-primary' : 'bg-transparent border-transparent'"
-                               class="flex-1 border rounded-xl py-2 px-3 font-bold text-warm-800 focus:outline-none transition"
-                               value="{{ $cat->nombre }}">
-                        <button type="button" @click="editing = !editing"
-                                class="text-xs font-black uppercase tracking-widest text-warm-400 hover:text-rose-primary transition"
-                                x-text="editing ? 'Cancelar' : 'Editar'"></button>
-                        <button type="submit" x-show="editing"
-                                class="text-xs font-black uppercase tracking-widest text-rose-primary hover:text-rose-dark transition">
-                            Guardar
+                    <div class="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm font-semibold">
+                        <button type="button" x-show="!editando" @click="editando = true" class="text-oceano hover:underline underline-offset-4">Cambiar nombre</button>
+                        <button type="button" @click="abierta = !abierta" :aria-expanded="abierta.toString()" aria-controls="fotos-{{ $cat->id }}"
+                                class="inline-flex items-center gap-1 text-oceano hover:underline underline-offset-4">
+                            Fotos
+                            <svg class="w-4 h-4 transition-transform" :class="abierta && 'rotate-180'" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
                         </button>
-                    </form>
+                        <x-confirmar-borrado :action="route('categorias.destroy', $cat)"
+                                             :que="'la categoría ' . $nombre . ($cuantos ? ' (sus ' . $cuantos . ' servicios quedarán sin categoría)' : '')" compacto />
+                    </div>
+                </div>
 
-                    {{-- Servicios count --}}
-                    <span class="text-xs text-warm-400 font-bold shrink-0">
-                        {{ $cat->servicios()->count() }} servicio(s)
-                    </span>
+                <div id="fotos-{{ $cat->id }}" x-show="abierta" x-cloak class="border-t border-linea bg-superficie p-4 sm:p-6 grid gap-6">
+                    @if ($fotos->isNotEmpty())
+                        <ul class="flex flex-wrap gap-4">
+                            @foreach ($fotos as $img)
+                                <li class="grid gap-1.5 w-28">
+                                    <x-foto :src="$img->url" proporcion="4/5" :alt="'Foto ' . $loop->iteration . ' de ' . $nombre" />
+                                    <p class="text-xs text-texto-suave">
+                                        {{ $loop->first ? 'Tarjeta del inicio' : ($loop->iteration === 2 ? 'Foto de la carta' : 'Foto extra') }}
+                                    </p>
+                                    <x-confirmar-borrado :action="route('categorias.imagen.destroy', $img)" que="esta foto" texto="Quitar" compacto />
+                                </li>
+                            @endforeach
+                        </ul>
+                    @endif
 
-                    {{-- Delete --}}
-                    <form method="POST" action="{{ route('categorias.destroy', $cat) }}"
-                          onsubmit="return confirm('¿Eliminar «{{ addslashes($cat->nombre) }}»? Los servicios quedarán sin categoría.')">
-                        @csrf @method('DELETE')
-                        <button type="submit"
-                                class="w-8 h-8 rounded-xl bg-red-50 text-red-400 hover:bg-red-500 hover:text-white flex items-center justify-center transition opacity-0 group-hover:opacity-100 active:scale-95">
-                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                        </button>
+                    <form method="POST" action="{{ route('categorias.imagen.store', $cat) }}" enctype="multipart/form-data" class="grid gap-4 max-w-xl">
+                        @csrf
+                        <x-subir-fotos name="imagen" :id="'foto-cat-' . $cat->id"
+                                       :etiqueta="$fotos->isEmpty() ? 'Agregar la foto de la tarjeta' : ($fotos->count() === 1 ? 'Agregar la foto de la carta' : 'Agregar otra foto')"
+                                       :ayuda="$fotos->count() === 1 ? 'Se muestra grande al lado de los precios. Si no subes ninguna, se repite la foto de la tarjeta.' : 'Las fotos verticales funcionan mejor.'"
+                                       :marcos="$fotos->count() === 1 ? [['Carta (escritorio)', '4/5'], ['Carta (celular)', '16/10']] : [['Tarjeta del inicio', '4/5']]" />
+                        <div><button type="submit" class="btn-primary">Subir foto</button></div>
                     </form>
                 </div>
-                @empty
-                <p class="px-8 py-10 text-center text-warm-400 text-sm font-bold">Aún no hay categorías. Crea la primera arriba.</p>
-                @endforelse
+            </article>
+        @empty
+            <div class="card p-10">
+                <p class="font-display text-2xl text-tinta">Todavía no hay categorías.</p>
+                <p class="text-texto-suave mt-1">Crea la primera con el formulario de arriba.</p>
             </div>
-
-        </div>
+        @endforelse
     </div>
 </x-app-layout>

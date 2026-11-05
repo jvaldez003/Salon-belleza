@@ -37,12 +37,7 @@ class BannerController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'titulo' => 'required|string|max:255',
-            // Validación de dimensiones para asegurar que el banner cubra bien el espacio hero
-            'imagen' => 'required|image|mimes:jpeg,png,jpg,webp,svg|max:10240|dimensions:min_width=1200,min_height=600',
-            'subtitulo' => 'nullable|string',
-        ]);
+        $request->validate($this->reglas(true), $this->mensajes());
 
         // Almacenamiento de la imagen en el disco público
         $path = $request->file('imagen')->store('banners', 'public');
@@ -76,10 +71,7 @@ class BannerController extends Controller
     {
         $banner = Banner::findOrFail($id);
 
-        $request->validate([
-            'titulo' => 'required|string|max:255',
-            'imagen' => 'nullable|image|mimes:jpeg,png,jpg,webp,svg|max:10240|dimensions:min_width=1200,min_height=600',
-        ]);
+        $request->validate($this->reglas(false), $this->mensajes());
 
         $data = [
             'titulo' => $request->titulo,
@@ -99,6 +91,32 @@ class BannerController extends Controller
         $banner->update($data);
 
         return redirect()->route('banners.index')->with('success', 'Banner actualizado correctamente.');
+    }
+
+    /**
+     * Reglas del banner. La foto se muestra en un arco vertical (4:5) en el inicio,
+     * así que se aceptan fotos verticales o cuadradas de al menos 800×800 px.
+     */
+    protected function reglas(bool $fotoObligatoria): array
+    {
+        return [
+            'titulo'      => 'required|string|max:255',
+            'subtitulo'   => 'nullable|string|max:400',
+            'texto_boton' => 'nullable|string|max:40',
+            'link_boton'  => 'nullable|string|max:255',
+            'imagen'      => ($fotoObligatoria ? 'required' : 'nullable') . '|image|mimes:jpeg,png,jpg,webp|max:10240|dimensions:min_width=800,min_height=800',
+        ];
+    }
+
+    protected function mensajes(): array
+    {
+        return [
+            'imagen.required'   => 'Elige la foto del banner.',
+            'imagen.dimensions' => 'La foto debe medir al menos 800 × 800 píxeles para verse nítida.',
+            'imagen.max'        => 'La foto puede pesar máximo 10 MB.',
+            'imagen.mimes'      => 'La foto debe ser JPG, PNG o WebP.',
+            'subtitulo.max'     => 'El texto puede tener máximo 400 caracteres; en el inicio se recorta a 4 líneas.',
+        ];
     }
 
     /**

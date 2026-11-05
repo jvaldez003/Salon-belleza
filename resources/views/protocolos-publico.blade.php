@@ -4,44 +4,7 @@
 @section('subtitle', 'Protocolos')
 
 @php
-    /*
-     | Lee la descripción del protocolo (pegada desde Word, con viñetas "•" y en MAYÚSCULAS)
-     | y la ordena en partes:
-     |   intro     → primera línea sin etiqueta ("Tratamiento hidratante (no alisa) que…")
-     |   pasos     → la línea "INCLUYE: a, b, c" separada por comas
-     |   duracion  → la línea que empieza por "DURACIÓN"
-     |   notas     → todo lo demás ("Requiere cepillado", etc.)
-     | Si la descripción no sigue ese formato, todo se muestra como notas: nunca se pierde texto.
-     */
-    $leerProtocolo = function (?string $texto) {
-        $limpiar = fn ($l) => trim(preg_replace(['/\(\s+/u', '/\s+\)/u', '/\s{2,}/u'], ['(', ')', ' '], Str::legible($l)));
-        $lineas = collect(preg_split('/\R/u', (string) $texto))
-            ->map(fn ($l) => trim(preg_replace('/^[\s•·\-\*–—▪●◦]+/u', '', $l)))
-            ->filter()
-            ->map($limpiar)
-            ->values();
-
-        $ficha = ['intro' => null, 'pasos' => [], 'duracion' => null, 'duracionNota' => null, 'notas' => []];
-
-        foreach ($lineas as $l) {
-            if (preg_match('/^incluye\s*:?\s*(.+)$/iu', $l, $m)) {
-                $ficha['pasos'] = collect(preg_split('/\s*,\s*/u', rtrim($m[1], '. ')))
-                    ->map(fn ($p) => Str::ucfirst(trim($p)))->filter()->values()->all();
-            } elseif (preg_match('/^duraci[oó]n\s*:?\s*(?:aprox(?:imada(?:mente)?)?\.?)?\s*(.+)$/iu', $l, $m)) {
-                $valor = trim($m[1]);
-                if (preg_match('/^(.*?)\s*\(([^)]+)\)\s*$/u', $valor, $p)) {
-                    $valor = $p[1];
-                    $ficha['duracionNota'] = Str::ucfirst($p[2]);
-                }
-                $ficha['duracion'] = 'Aprox. ' . $valor;
-            } elseif (! $ficha['intro'] && ! str_contains($l, ':')) {
-                $ficha['intro'] = Str::ucfirst($l);
-            } else {
-                $ficha['notas'][] = Str::ucfirst($l);
-            }
-        }
-        return $ficha;
-    };
+    // La descripción se ordena en intro, pasos, duración y notas con Protocolo::ficha (ver el modelo).
 
     // Color de cada paso: baja de "agua clara" a "abismo" a medida que avanza el procedimiento
     $colorPaso = function (int $i, int $total) {
@@ -52,13 +15,13 @@
         return ['fondo' => sprintf('#%02X%02X%02X', ...$rgb), 'texto' => $lum > 0.5 ? '#0A2F6B' : '#FFFFFF'];
     };
 
-    $waNumero = $configuracionSitio->whatsapp ? preg_replace('/[^0-9]/', '', $configuracionSitio->whatsapp) : null;
+    $waNumero = $configuracionSitio->whatsapp_numero;
 
     $items = $protocolos->values()->map(fn ($p) => [
         'id'     => 'protocolo-' . $p->id,
         'modelo' => $p,
-        'nombre' => Str::ucfirst(Str::legible($p->nombre)),
-        'ficha'  => $leerProtocolo($p->descripcion),
+        'nombre' => $p->nombre_publico,
+        'ficha'  => $p->ficha,
         'medios' => $p->medios->values(),
     ]);
     $varios = $items->count() > 1;

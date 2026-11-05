@@ -23,17 +23,40 @@ class ServicioController extends Controller
         return view('servicios.create', compact('categorias'));
     }
 
-    public function store(Request $request)
+    /** Reglas compartidas por crear y editar. Fotos de hasta 5 MB (las del celular suelen pesar 3-5 MB). */
+    protected function reglas(): array
     {
-        $request->validate([
+        return [
             'nombre'       => 'required|string|max:60',
             'precio'       => 'required|numeric|min:0',
+            'duracion'     => 'required|integer|min:5|max:600',
             'descripcion'  => 'nullable|string',
             'categoria_id' => 'nullable|exists:categorias,id',
-            'imagenes.*'   => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-        ]);
+            'imagenes.*'   => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+        ];
+    }
 
-        $servicio = Servicio::create($request->only(['nombre', 'precio', 'descripcion', 'categoria_id']));
+    protected function mensajes(): array
+    {
+        return [
+            'duracion.required' => 'Indica cuánto dura el servicio, en minutos.',
+            'imagenes.*.max'    => 'Cada foto puede pesar máximo 5 MB.',
+            'imagenes.*.mimes'  => 'Las fotos deben ser JPG, PNG, GIF o WebP.',
+        ];
+    }
+
+    /** Datos del formulario listos para guardar. */
+    protected function datos(Request $request): array
+    {
+        return $request->only(['nombre', 'precio', 'duracion', 'descripcion', 'categoria_id'])
+            + ['activo' => $request->boolean('activo')];
+    }
+
+    public function store(Request $request)
+    {
+        $request->validate($this->reglas(), $this->mensajes());
+
+        $servicio = Servicio::create($this->datos($request));
 
         if ($request->hasFile('imagenes')) {
             foreach ($request->file('imagenes') as $imagen) {
@@ -54,16 +77,10 @@ class ServicioController extends Controller
 
     public function update(Request $request, $id)
     {
-        $request->validate([
-            'nombre'       => 'required|string|max:60',
-            'precio'       => 'required|numeric|min:0',
-            'descripcion'  => 'nullable|string',
-            'categoria_id' => 'nullable|exists:categorias,id',
-            'imagenes.*'   => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-        ]);
+        $request->validate($this->reglas(), $this->mensajes());
 
         $servicio = Servicio::findOrFail($id);
-        $servicio->update($request->only(['nombre', 'precio', 'descripcion', 'categoria_id']));
+        $servicio->update($this->datos($request));
 
         if ($request->hasFile('imagenes')) {
             foreach ($request->file('imagenes') as $imagen) {

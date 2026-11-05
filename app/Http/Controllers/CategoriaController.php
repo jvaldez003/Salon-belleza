@@ -54,7 +54,10 @@ class CategoriaController extends Controller
 
     public function storeImagen(Request $request, Categoria $categoria)
     {
-        $request->validate(['imagen' => 'required|image|max:4096']);
+        $request->validate(
+            ['imagen' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:5120'],
+            ['imagen.max' => 'La foto puede pesar máximo 5 MB.', 'imagen.required' => 'Elige una foto para subir.']
+        );
 
         $path = $request->file('imagen')->store('categorias', 'public');
         $categoria->imagenes()->create([

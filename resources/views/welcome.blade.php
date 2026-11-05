@@ -21,7 +21,7 @@
         return optional($imgs->get($preferida) ?? $imgs->first())->url ?: ($c->imagen ?: null);
     };
 
-    $whatsappNumero = $configuracionSitio->whatsapp ? preg_replace('/[^0-9]/', '', $configuracionSitio->whatsapp) : null;
+    $whatsappNumero = $configuracionSitio->whatsapp_numero;
     $nombreNegocio  = $configuracionSitio->nombre_negocio ?? 'Arrecife';
 @endphp
 

@@ -4,7 +4,7 @@
     Requiere $urlReserva (lo comparte AppServiceProvider).
 --}}
 @php
-    $waReserva = $configuracionSitio->whatsapp ? preg_replace('/[^0-9]/', '', $configuracionSitio->whatsapp) : null;
+    $waReserva = $configuracionSitio->whatsapp_numero;
 @endphp
 <section class="bg-abismo" aria-labelledby="titulo-reserva">
     <div class="max-w-arrecife mx-auto px-4 sm:px-6 py-16 md:py-28 grid gap-6">

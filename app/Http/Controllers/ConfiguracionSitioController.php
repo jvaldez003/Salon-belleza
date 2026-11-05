@@ -27,7 +27,7 @@ class ConfiguracionSitioController extends Controller
             'logo'                  => 'nullable|image|max:2048',
             'quienes_somos_titulo'  => 'nullable|string|max:100',
             'quienes_somos_texto'   => 'nullable|string|max:2000',
-            'quienes_somos_imagen'  => 'nullable|image|max:3072',
+            'quienes_somos_imagen'  => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
             'mision_texto'          => 'nullable|string|max:1000',
             'mision_imagen'         => 'nullable|image|max:3072',
             'vision_texto'          => 'nullable|string|max:1000',
@@ -67,7 +67,10 @@ class ConfiguracionSitioController extends Controller
     {
         $request->validate([
             'seccion' => 'required|in:quienes_somos,mision,vision',
-            'imagen'  => 'required|image|max:4096',
+            'imagen'  => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+        ], [
+            'imagen.required' => 'Elige una foto para subir.',
+            'imagen.max'      => 'La foto puede pesar máximo 5 MB.',
         ]);
 
         $orden = SeccionImagen::where('seccion', $request->seccion)->count();

@@ -3,7 +3,7 @@
     $esEquipo   = auth()->user()->isAdmin() || auth()->user()->isEditor();
     $especialistas = \App\Models\Empleado::whereIn('id', $cita->servicios->pluck('pivot.empleado_id')->filter())->pluck('nombre', 'id');
     $editable   = ! in_array($cita->estado, ['cancelada', 'completada'], true);
-    $wa = $configuracionSitio->whatsapp ? preg_replace('/[^0-9]/', '', $configuracionSitio->whatsapp) : null;
+    $wa = $configuracionSitio->whatsapp_numero;
 @endphp
 
 <x-app-layout titulo="Detalle de la cita">
