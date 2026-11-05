@@ -31,7 +31,7 @@ Tipografía: `font-display` = Bodoni Moda (títulos, precios, logotipo), `font-s
 - `<x-boton href variante>`: primario · secundario · claro (sobre abismo) · peligro. Sin `href` es `<button>` (por defecto `type="button"`).
 - `<x-precio :valor desde>`: pesos colombianos redondeados ($30.000), números alineados.
 - `<x-marca tono>`: concha del logo (`public/img/logo-concha.png`) + nombre en Bodoni. `tono="claro"` sobre abismo. El logo completo (`img/logo-completo.png`) solo va sobre fondos claros.
-- `<x-luz-agua />`: solo dentro de la foto del hero del inicio. Una vez por sitio.
+- Hero del inicio (`welcome.blade.php`, `resources/js/hero.js` + `hero-agua.js`): foto en WebGL con transición de onda de agua, acercamiento lento, cáusticas y textos que emergen palabra por palabra. Es el **único** elemento audaz del sitio: no copiar sus animaciones en otras secciones. `<x-luz-agua />` queda como respaldo sin WebGL.
 - Panel admin: `<x-aviso />` (mensajes de sesión), `<x-estado-cita :estado>`, `<x-confirmar-borrado :action que>` (nunca `confirm()` del navegador), `<x-subir-fotos name marcos>` (vista previa del recorte por marco), `<x-horario-semana :dias>`.
 - Números: precios con `<x-precio>`/Bodoni; **conteos** (citas, clientes, totales) en Manrope semibold con `tabular`, porque en Bodoni el 1 parece una I y el 0 parece ().
 - Paginación: `->links()` usa `partials/paginacion` automáticamente. Páginas de error en `resources/views/errors` (sin base de datos).

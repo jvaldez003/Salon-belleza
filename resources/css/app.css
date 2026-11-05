@@ -130,3 +130,89 @@
     .tabular { font-variant-numeric: tabular-nums; }
     .opsz-max { font-variation-settings: "opsz" 96; }
 }
+
+/* ── Presentación del inicio (banners) ─────────────────────────────
+   Una sola secuencia orquestada: al cargar sube el nombre letra por letra;
+   en cada banner las palabras del título emergen de una máscara (como saliendo del agua),
+   y al irse se hunden. Con "reducir movimiento" todo aparece sin animación (regla global). */
+.hero-mascara {
+    display: inline-block;
+    overflow: hidden;
+    vertical-align: bottom;
+    padding-bottom: .12em;
+    margin-bottom: -.12em;
+}
+.hero-letra,
+.hero-palabra {
+    display: inline-block;
+    transform: translateY(110%);
+    will-change: transform;
+}
+.hero-sub {
+    opacity: 0;
+    transform: translateY(.4em);
+}
+.hero[data-listo] .hero-letra {
+    transform: none;
+    transition: transform 1.2s cubic-bezier(.16, 1, .3, 1) calc(var(--i) * 55ms + 80ms);
+}
+.hero[data-listo] .hero-sub {
+    opacity: 1;
+    transform: none;
+    transition: opacity 1s ease 650ms, transform 1.2s cubic-bezier(.16, 1, .3, 1) 650ms;
+}
+
+/* Textos de cada banner: todos ocupan la misma celda para que la altura no salte */
+.hero-texto {
+    grid-area: 1 / 1;
+    visibility: hidden;
+    transition: visibility 0s linear .55s;
+}
+.hero-texto .hero-palabra {
+    transition: transform .55s cubic-bezier(.7, 0, .84, 0);
+}
+.hero-texto .hero-aparece {
+    opacity: 0;
+    transform: translateY(14px);
+    filter: blur(6px);
+    transition: opacity .35s ease, transform .35s ease, filter .35s ease;
+}
+.hero[data-listo] .hero-texto.is-activa {
+    visibility: visible;
+    transition: visibility 0s;
+}
+.hero[data-listo] .hero-texto.is-activa .hero-palabra {
+    transform: none;
+    transition: transform 1.1s cubic-bezier(.16, 1, .3, 1) calc(var(--i) * 70ms + 420ms);
+}
+.hero[data-listo] .hero-texto.is-activa .hero-aparece {
+    opacity: 1;
+    transform: none;
+    filter: none;
+    transition:
+        opacity .9s ease calc(var(--d, 0ms) + 800ms),
+        transform 1.1s cubic-bezier(.16, 1, .3, 1) calc(var(--d, 0ms) + 800ms),
+        filter .9s ease calc(var(--d, 0ms) + 800ms);
+}
+
+/* Marco en arco: respira un poco al pasar el mouse */
+.hero-arco {
+    transition: border-radius 1.2s cubic-bezier(.16, 1, .3, 1), transform 1.2s cubic-bezier(.16, 1, .3, 1);
+}
+@media (hover: hover) {
+    .hero-arco:hover { transform: scale(1.012); }
+}
+
+/* Barras de progreso de los banners */
+[data-barra] {
+    transform: scaleX(0);
+    transform-origin: left;
+}
+
+/* Con "reducir movimiento": los textos del inicio aparecen de una vez, sin escalonado */
+@media (prefers-reduced-motion: reduce) {
+    .hero .hero-letra, .hero .hero-palabra, .hero .hero-sub, .hero .hero-aparece, .hero .hero-texto, .hero-arco {
+        transition: none !important;
+    }
+    .hero-arco:hover { transform: none; }
+}

@@ -27,7 +27,7 @@
 
 @section('content')
 
-{{-- ═════════ HERO: superficie + foto con luz de agua ═════════ --}}
+{{-- ═════════ HERO: banners con onda de agua (WebGL) y textos que emergen ═════════ --}}
 @php
     $diapositivas = $banners->map(fn ($b) => [
         'titulo'    => $b->titulo,
@@ -45,60 +45,103 @@
         ]);
     }
     $total = $diapositivas->count();
+    $urlFoto = fn ($src) => empty($src) ? null
+        : (Str::startsWith($src, ['http://', 'https://', '/', 'data:']) ? $src : asset('storage/' . ltrim($src, '/')));
+    $configHero = ['total' => $total, 'intervalo' => 7000, 'fotos' => $diapositivas->map(fn ($d) => $urlFoto($d['foto']))->values()];
 @endphp
 
-<section class="bg-superficie" aria-label="Presentación"
-         x-data="{ activa: 0, total: {{ $total }}, ir(n) { this.activa = (n + this.total) % this.total } }">
+<section class="hero bg-superficie overflow-hidden" aria-label="Presentación" aria-roledescription="carrusel"
+         x-data="heroArrecife({{ Js::from($configHero) }})"
+         @focusin="enfoque = true" @focusout="enfoque = $el.contains($event.relatedTarget)">
+    <noscript><style>
+        .hero-letra, .hero-palabra, .hero-texto .hero-aparece { transform: none; opacity: 1; filter: none; }
+        .hero-sub { opacity: 1; transform: none; }
+        .hero-texto:first-child { visibility: visible; }
+    </style></noscript>
+
     <div class="max-w-arrecife mx-auto px-4 sm:px-6 py-8 md:py-16 lg:py-20 grid md:grid-cols-[1.05fr_1fr] gap-8 md:gap-14 lg:gap-20 items-center">
 
         <div class="grid gap-6 min-w-0">
             <h1 class="opsz-max font-medium tracking-[.02em] leading-[.9] text-[clamp(3.25rem,1.5rem+8vw,8rem)]">
-                {{ $nombreNegocio }}
-                <span class="block mt-3 font-normal italic tracking-normal text-oceano text-[.32em]">Beauty Studio</span>
+                <span class="sr-only">{{ $nombreNegocio }} Beauty Studio</span>
+                <span class="hero-mascara" aria-hidden="true">@foreach (mb_str_split($nombreNegocio) as $k => $letra)<span class="hero-letra" style="--i: {{ $k }}">{{ $letra === ' ' ? "\u{00A0}" : $letra }}</span>@endforeach</span>
+                <span class="hero-sub block mt-3 font-normal italic tracking-normal text-oceano text-[.32em]" aria-hidden="true">Beauty Studio</span>
             </h1>
 
-            @foreach ($diapositivas as $i => $d)
-                <div x-show="activa === {{ $i }}" @if ($i > 0) x-cloak @endif class="grid gap-4"
-                     x-transition:enter="transition ease-out duration-500" x-transition:enter-start="opacity-0">
-                    <p class="font-display text-[clamp(1.5rem,1.1rem+1.4vw,2.1rem)] leading-tight text-tinta max-w-[22ch]">{{ Str::legible($d['titulo']) }}</p>
-                    @if ($d['texto'])
-                        <p class="text-lg leading-relaxed text-texto max-w-[46ch] line-clamp-4">{{ Str::legible($d['texto']) }}</p>
-                    @endif
-                    <div class="flex flex-wrap gap-3 pt-2">
-                        @if ($d['boton'] && $d['enlace'])
-                            <x-boton :href="$d['enlace']">{{ $d['boton'] }}</x-boton>
-                        @else
-                            <x-boton :href="$urlReserva">Reservar cita</x-boton>
+            <div class="grid">
+                @foreach ($diapositivas as $i => $d)
+                    <div class="hero-texto grid gap-4 content-start" :class="activa === {{ $i }} && 'is-activa'"
+                         :aria-hidden="(activa !== {{ $i }}).toString()"
+                         role="group" aria-roledescription="diapositiva" aria-label="{{ $i + 1 }} de {{ $total }}">
+                        <p class="font-display text-[clamp(1.5rem,1.1rem+1.4vw,2.1rem)] leading-tight text-tinta max-w-[22ch]">
+                            @foreach (preg_split('/\s+/u', trim(Str::legible($d['titulo']))) as $k => $palabra)<span class="hero-mascara"><span class="hero-palabra" style="--i: {{ $k }}">{{ $palabra }}</span></span>{{ ' ' }}@endforeach
+                        </p>
+                        @if ($d['texto'])
+                            <p class="hero-aparece text-lg leading-relaxed text-texto max-w-[46ch] line-clamp-4">{{ Str::legible($d['texto']) }}</p>
                         @endif
-                        <x-boton variante="secundario" href="#servicios">Ver servicios y precios</x-boton>
+                        <div class="hero-aparece flex flex-wrap gap-3 pt-2" style="--d: 120ms">
+                            @if ($d['boton'] && $d['enlace'])
+                                <x-boton :href="$d['enlace']">{{ $d['boton'] }}</x-boton>
+                            @else
+                                <x-boton :href="$urlReserva">Reservar cita</x-boton>
+                            @endif
+                            <x-boton variante="secundario" href="#servicios">Ver servicios y precios</x-boton>
+                        </div>
                     </div>
-                </div>
-            @endforeach
+                @endforeach
+            </div>
 
             @if ($total > 1)
-                <div class="flex items-center gap-3 pt-2" aria-label="Cambiar presentación">
-                    <button type="button" @click="ir(activa - 1)" class="w-10 h-10 rounded-full border border-linea text-oceano hover:bg-bruma transition-colors flex items-center justify-center" aria-label="Anterior">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
-                    </button>
-                    <span class="text-sm text-texto-suave tabular"><span x-text="activa + 1">1</span> de {{ $total }}</span>
-                    <button type="button" @click="ir(activa + 1)" class="w-10 h-10 rounded-full border border-linea text-oceano hover:bg-bruma transition-colors flex items-center justify-center" aria-label="Siguiente">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
-                    </button>
+                <div class="hero-sub flex flex-wrap items-center gap-x-5 gap-y-3 pt-3">
+                    <div class="flex items-center gap-4">
+                        @foreach ($diapositivas as $i => $d)
+                            <button type="button" @click="ir({{ $i }})" class="group grid gap-2 py-1 text-left"
+                                    :aria-current="(activa === {{ $i }}).toString()"
+                                    aria-label="Ver {{ Str::legible($d['titulo']) }}">
+                                <span class="text-xs font-semibold tabular transition-colors"
+                                      :class="activa === {{ $i }} ? 'text-tinta' : 'text-texto-suave group-hover:text-oceano'">{{ str_pad($i + 1, 2, '0', STR_PAD_LEFT) }}</span>
+                                <span class="block h-[2px] w-12 sm:w-16 rounded-full bg-linea overflow-hidden">
+                                    <span data-barra class="block h-full w-full bg-oceano"></span>
+                                </span>
+                            </button>
+                        @endforeach
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button type="button" @click="ir(activa - 1)" class="w-10 h-10 rounded-full border border-linea text-oceano hover:bg-bruma flex items-center justify-center" aria-label="Banner anterior">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+                        </button>
+                        <button type="button" @click="ir(activa + 1)" class="w-10 h-10 rounded-full border border-linea text-oceano hover:bg-bruma flex items-center justify-center" aria-label="Banner siguiente">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+                        </button>
+                        <button type="button" x-show="automatico" @click="alternarPausa()" class="w-10 h-10 rounded-full text-texto-suave hover:text-oceano hover:bg-bruma flex items-center justify-center"
+                                :aria-label="pausado ? 'Reanudar el cambio automático' : 'Pausar el cambio automático'">
+                            <svg x-show="!pausado" class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>
+                            <svg x-show="pausado" x-cloak class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13a1 1 0 001.5.86l10.5-6.5a1 1 0 000-1.72L9.5 4.64A1 1 0 008 5.5z"/></svg>
+                        </button>
+                    </div>
                 </div>
             @endif
         </div>
 
-        {{-- Foto en arco con la luz de agua (único efecto llamativo del sitio) --}}
-        <div class="order-first md:order-none relative overflow-hidden bg-bruma-honda aspect-[4/4.4] md:aspect-4/5 max-w-full rounded-t-[160px] md:rounded-t-[220px] rounded-b-foto isolate">
-            @foreach ($diapositivas as $i => $d)
-                <div class="absolute inset-0" x-show="activa === {{ $i }}" @if ($i > 0) x-cloak @endif
-                     x-transition:enter="transition-opacity ease-out duration-700" x-transition:enter-start="opacity-0"
-                     x-transition:leave="transition-opacity ease-in duration-500" x-transition:leave-end="opacity-0">
-                    <x-foto :src="$d['foto']" :alt="Str::legible($d['titulo'])" foco="50% 30%" inicial="A"
-                            :prioridad="$i === 0" class="h-full aspect-auto !rounded-none" />
-                </div>
-            @endforeach
-            <x-luz-agua />
+        {{-- Foto en arco: WebGL con onda de agua y luz; sin WebGL, las fotos normales con la luz en canvas --}}
+        <div x-ref="foto"
+             class="hero-arco order-first md:order-none relative overflow-hidden bg-bruma-honda aspect-[4/4.4] md:aspect-4/5 max-w-full rounded-t-[160px] md:rounded-t-[220px] rounded-b-foto isolate touch-pan-y select-none"
+             @pointerenter="encima = $event.pointerType === 'mouse'" @pointerleave="encima = false; soltar()"
+             @pointermove="mover($event)" @pointerdown="tocar($event)" @pointerup="levantar($event)" @pointercancel="levantar($event)">
+            {{-- Fotos normales: quedan debajo del lienzo (que las cubre al aparecer) y sirven si no hay WebGL --}}
+            <div class="absolute inset-0">
+                @foreach ($diapositivas as $i => $d)
+                    <div class="absolute inset-0" x-show="activa === {{ $i }}" @if ($i > 0) x-cloak @endif
+                         x-transition:enter="transition-opacity ease-out duration-700" x-transition:enter-start="opacity-0"
+                         x-transition:leave="transition-opacity ease-in duration-500" x-transition:leave-end="opacity-0">
+                        <x-foto :src="$d['foto']" :alt="Str::legible($d['titulo'])" foco="50% 30%" inicial="A"
+                                :prioridad="$i === 0" class="h-full aspect-auto !rounded-none" />
+                    </div>
+                @endforeach
+                <div x-show="!glActivo"><x-luz-agua /></div>
+            </div>
+            <canvas x-ref="lienzo" class="absolute inset-0 w-full h-full opacity-0 transition-opacity duration-1000 pointer-events-none"
+                    :class="glActivo && 'opacity-100'" aria-hidden="true"></canvas>
             <div class="absolute inset-0 pointer-events-none bg-gradient-to-b from-transparent from-55% to-abismo/45" aria-hidden="true"></div>
         </div>
     </div>
