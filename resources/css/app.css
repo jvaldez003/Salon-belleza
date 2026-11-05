@@ -4,8 +4,7 @@
 
 /*
  | Sistema de diseño Arrecife — ver tailwind.config.js para los tokens.
- | Las clases de componentes conservan sus nombres anteriores (btn-primary, card, form-input…)
- | para que las vistas existentes sigan funcionando mientras se migran.
+ | Clases de componentes: btn-*, card, form-input, label, badge-*, alert-*, foto-*, precio.
  */
 
 @layer base {
@@ -20,20 +19,6 @@
         --texto:       #2C4468;
         --texto-suave: #546C8C;
         --linea:       #C5DAE8;
-
-        /* Alias heredados (usados por vistas antiguas) */
-        --color-primary:       var(--abismo);
-        --color-primary-light: var(--oceano);
-        --color-secondary:     var(--laguna);
-        --color-accent:        var(--agua);
-        --color-bg:            var(--superficie);
-        --color-bg-dark:       var(--bruma);
-        --color-border:        var(--bruma-honda);
-        --color-text:          var(--texto);
-        --color-text-light:    var(--texto-suave);
-        --color-silver:        #BFC6CC;
-        --color-surface:       #FFFFFF;
-        --gradient-main: linear-gradient(135deg, #0A2F6B 0%, #0E4A9E 45%, #008FE8 100%);
     }
 
     body {

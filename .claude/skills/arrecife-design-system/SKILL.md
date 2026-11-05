@@ -21,7 +21,7 @@ Concepto: **"descenso al arrecife"**. La página empieza clara (superficie) y ba
 | `linea` | #C5DAE8 | Bordes y divisores |
 | `sobre-abismo` / `sobre-abismo-suave` | #EAF6FF / #A9C6E4 | Texto sobre fondo abismo |
 
-**Prohibido en código nuevo:** `rose-*`, `gold-*`, `cream*`, `warm-*` y colores hex sueltos (`bg-[#...]`, `style="color:#..."`). Son alias heredados. Al tocar una vista, migra sus clases a los tokens nuevos.
+**Prohibido:** colores hex sueltos (`bg-[#...]`, `style="color:#..."`) y los grises/índigo por defecto de Tailwind (`gray-*`, `indigo-*`). Los alias viejos `rose`/`gold`/`cream`/`warm` ya no existen. Excepción: estados semánticos (verde completada, rojo cancelada/peligro).
 
 Tipografía: `font-display` = Bodoni Moda (títulos, precios, logotipo), `font-sans` = Manrope (todo lo demás). Cargadas en `resources/views/partials/fuentes.blade.php`. Títulos con peso 500, no `font-black`.
 
@@ -30,8 +30,11 @@ Tipografía: `font-display` = Bodoni Moda (títulos, precios, logotipo), `font-s
 - `<x-foto :src proporcion foco inicial alt prioridad>`: **toda** foto subida por el salón va aquí. Proporciones: `4/5` tarjetas, `3/4` retratos, `1/1` galería, `16/9` banners (en móvil usar `class="aspect-4/5 md:aspect-16/9"`). `foco`: arriba/centro/abajo. Sin foto muestra un respaldo de marca con la inicial. Texto encima de la foto: slot con `<div class="foto-velo">`.
 - `<x-boton href variante>`: primario · secundario · claro (sobre abismo) · peligro. Sin `href` es `<button>` (por defecto `type="button"`).
 - `<x-precio :valor desde>`: pesos colombianos redondeados ($30.000), números alineados.
-- `<x-marca tono>`: logotipo tipográfico "ARRECIFE Beauty Studio" (no hay logo definitivo todavía).
+- `<x-marca tono>`: concha del logo (`public/img/logo-concha.png`) + nombre en Bodoni. `tono="claro"` sobre abismo. El logo completo (`img/logo-completo.png`) solo va sobre fondos claros.
 - `<x-luz-agua />`: solo dentro de la foto del hero del inicio. Una vez por sitio.
+- Panel admin: `<x-aviso />` (mensajes de sesión), `<x-estado-cita :estado>`, `<x-confirmar-borrado :action que>` (nunca `confirm()` del navegador), `<x-subir-fotos name marcos>` (vista previa del recorte por marco), `<x-horario-semana :dias>`.
+- Números: precios con `<x-precio>`/Bodoni; **conteos** (citas, clientes, totales) en Manrope semibold con `tabular`, porque en Bodoni el 1 parece una I y el 0 parece ().
+- Paginación: `->links()` usa `partials/paginacion` automáticamente. Páginas de error en `resources/views/errors` (sin base de datos).
 
 Clases CSS (resources/css/app.css): `btn-primary`, `btn-secondary`, `btn-claro`, `btn-peligro`, `card`, `form-input`, `label`, `badge-*`, `alert-*`, `foto-marco`, `foto-velo`, `foto-respaldo`, `precio`, `tabular`.
 

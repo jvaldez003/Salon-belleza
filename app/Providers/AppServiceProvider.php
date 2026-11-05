@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\ConfiguracionSitio;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\URL;
@@ -25,6 +26,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Paginator::defaultView('partials.paginacion');
+
         if ($this->app->environment('local') && ! $this->app->runningInConsole()) {
             URL::forceRootUrl(request()->getSchemeAndHttpHost());
         }
