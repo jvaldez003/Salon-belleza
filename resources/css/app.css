@@ -442,3 +442,42 @@ html:not(.js) .carta :is(.carta-palabra, .carta-aparece, .carta-foto, .carta-fot
 @media (prefers-reduced-motion: reduce) {
     .lectura-palabra { opacity: 1; transition: none; }
 }
+
+/* ── Protocolos ─────────────────────────────────────────────────────
+   Ficha: al mostrarse (carga o cambio de tratamiento) la foto sube como agua y los datos llegan escalonados.
+   Son animaciones CSS: se repiten solas cada vez que la ficha pasa de oculta a visible. */
+.ficha-foto {
+    animation: carta-marea 1.1s cubic-bezier(.7, 0, .2, 1) both;
+}
+.ficha-foto img,
+.ficha-foto .foto-respaldo {
+    animation: carta-asienta 1.8s cubic-bezier(.16, 1, .3, 1) both;
+}
+.ficha-entra {
+    animation: carta-sube .9s cubic-bezier(.16, 1, .3, 1) both;
+    animation-delay: calc(var(--i, 0) * 90ms + 250ms);
+}
+
+/* Paso a paso: --p (0 a 1) lo pone revelar.js según cuánto se ha bajado por la lista.
+   Cada paso --i de --n se enciende al llegar, y la línea hacia el siguiente se llena hacia abajo. */
+.pasos .paso {
+    --t: clamp(0, calc(var(--p, 1) * (var(--n, 1) + .6) - var(--i, 0)), 1);
+}
+.pasos .paso-punto {
+    opacity: calc(.25 + var(--t) * .75);
+    scale: calc(.72 + var(--t) * .28);
+    transition: opacity .3s linear, scale .5s cubic-bezier(.16, 1, .3, 1);
+}
+.pasos .paso-texto {
+    opacity: calc(.35 + var(--t) * .65);
+    transition: opacity .3s linear;
+}
+.pasos .paso-linea {
+    transform-origin: top;
+    transform: translateX(-50%) scaleY(clamp(0, calc(var(--p, 1) * (var(--n, 1) + .6) - var(--i, 0) - .5), 1));
+    transition: transform .25s linear;
+}
+@media (prefers-reduced-motion: reduce) {
+    .ficha-foto, .ficha-foto img, .ficha-foto .foto-respaldo, .ficha-entra { animation: none !important; }
+    .pasos { --p: 1 !important; }
+}

@@ -8,6 +8,7 @@
  *   data-revelar="lectura"    (párrafos) el texto se va entintando palabra por palabra al bajar
  *   style="--d: 200ms"        retraso, para escalonar varios elementos
  *
+ *   data-progreso             recibe --p de 0 a 1 según cuánto se ha bajado por él (p. ej. el paso a paso)
  *   data-paralaje="0.1"       la foto de adentro se mueve más lento que la página (profundidad)
  *   data-magnetico            el botón se acerca un poco al cursor
  *
@@ -131,9 +132,9 @@ function iniciarMagneticos() {
 
 /** Texto que se entinta al bajar: --p va de 0 a 1 según cuánto ha recorrido el párrafo la pantalla. */
 function iniciarLectura() {
-    const elementos = [...document.querySelectorAll('[data-revelar="lectura"]')];
+    const elementos = [...document.querySelectorAll('[data-revelar="lectura"], [data-progreso]')];
     if (!elementos.length) return;
-    elementos.forEach((el) => partirPalabras(el, 'lectura-palabra', false));
+    elementos.filter((el) => el.dataset.revelar === 'lectura').forEach((el) => partirPalabras(el, 'lectura-palabra', false));
     if (reducir()) { elementos.forEach((el) => el.style.setProperty('--p', 1)); return; }
 
     let pendiente = false;
@@ -142,7 +143,7 @@ function iniciarLectura() {
         const alto = window.innerHeight;
         elementos.forEach((el) => {
             const r = el.getBoundingClientRect();
-            if (r.bottom < -alto || r.top > alto * 2) return;
+            if (!r.height || r.bottom < -alto || r.top > alto * 2) return; // oculto o lejos
             // Empieza cuando el párrafo entra por abajo y termina cuando su final pasa el 45 % de la pantalla
             const p = (alto * .92 - r.top) / (r.height + alto * .47);
             el.style.setProperty('--p', Math.min(1, Math.max(0, p)).toFixed(3));
@@ -151,6 +152,8 @@ function iniciarLectura() {
     const pedir = () => { if (!pendiente) { pendiente = true; requestAnimationFrame(actualizar); } };
     window.addEventListener('scroll', pedir, { passive: true });
     window.addEventListener('resize', pedir, { passive: true });
+    // Cuando un panel oculto se muestra (p. ej. al elegir otro protocolo) hay que recalcular
+    document.addEventListener('recalcular-progreso', pedir);
     actualizar();
 }
 

@@ -1,4 +1,4 @@
-@extends('layouts.public')
+﻿@extends('layouts.public')
 
 @section('title', $configuracionSitio->nombre_negocio ?? 'Arrecife')
 @section('subtitle', 'Protocolos')
@@ -32,8 +32,8 @@
 {{-- ═════════ ENCABEZADO (superficie) ═════════ --}}
 <section class="bg-superficie" aria-labelledby="titulo-protocolos">
     <div class="max-w-arrecife mx-auto px-4 sm:px-6 pt-10 md:pt-20 pb-6 md:pb-10 grid md:grid-cols-[1fr_auto] gap-x-16 gap-y-5 items-end">
-        <h1 id="titulo-protocolos" class="opsz-max text-[clamp(2.75rem,1.4rem+5.5vw,6rem)] leading-[.95]">Protocolos</h1>
-        <p class="text-lg leading-relaxed max-w-[44ch]">
+        <h1 id="titulo-protocolos" data-revelar="palabras" class="opsz-max text-[clamp(2.75rem,1.4rem+5.5vw,6rem)] leading-[.95]">Protocolos</h1>
+        <p data-revelar="sube" style="--d: 250ms" class="text-lg leading-relaxed max-w-[44ch]">
             Cada tratamiento paso a paso: qué incluye, cuánto dura y qué tener en cuenta antes de reservar.
         </p>
     </div>
@@ -59,6 +59,7 @@
                 this.sel = id;
                 history.replaceState(null, '', '#' + id);
                 this.$nextTick(() => {
+                    document.dispatchEvent(new Event('recalcular-progreso'));
                     const top = this.$refs.ficha.getBoundingClientRect().top;
                     if (top < 0 || top > window.innerHeight * .6) {
                         this.$refs.ficha.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
@@ -74,14 +75,14 @@
                  class="sticky top-[72px] md:top-24 z-30 bg-superficie/95 md:bg-transparent backdrop-blur md:backdrop-blur-none border-y border-linea md:border-0">
                 <ul class="flex md:flex-col gap-2 md:gap-0 overflow-x-auto px-4 md:px-0 py-3 md:py-0 snap-x">
                     @foreach ($items as $it)
-                        <li class="shrink-0 snap-start md:border-b md:border-linea md:first:border-t">
+                        <li class="shrink-0 snap-start md:border-b md:border-linea md:first:border-t" data-revelar="sube" style="--d: {{ 200 + $loop->index * 70 }}ms">
                             <button type="button" @click="elegir('{{ $it['id'] }}')"
                                     :aria-pressed="(sel === '{{ $it['id'] }}').toString()"
                                     class="group w-full text-left whitespace-nowrap md:whitespace-normal rounded-full md:rounded-none px-4 md:px-0 py-2 md:py-5 border md:border-0"
                                     :class="sel === '{{ $it['id'] }}' ? 'bg-oceano border-oceano text-white md:bg-transparent md:text-oceano' : 'border-linea text-tinta hover:text-oceano'">
-                                <span class="flex items-center gap-3">
+                                <span class="flex items-center">
                                     <span class="hidden md:block h-px bg-current transition-all duration-300"
-                                          :class="sel === '{{ $it['id'] }}' ? 'w-8' : 'w-0 group-hover:w-3'" aria-hidden="true"></span>
+                                          :class="sel === '{{ $it['id'] }}' ? 'w-8 mr-3' : 'w-0 group-hover:w-3 group-hover:mr-3'" aria-hidden="true"></span>
                                     <span class="font-semibold md:font-normal md:font-display text-[0.9375rem] md:text-[1.6rem] md:leading-tight">{{ $it['nombre'] }}</span>
                                 </span>
                                 @if ($it['ficha']['duracion'])
@@ -103,17 +104,16 @@
                     $totalPasos = count($f['pasos']);
                 @endphp
                 <article id="{{ $it['id'] }}" x-show="sel === '{{ $it['id'] }}'" @if (! $loop->first) x-cloak @endif
-                         x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0"
                          class="grid gap-12 md:gap-16" aria-labelledby="nombre-{{ $it['id'] }}">
 
                     {{-- Presentación: foto + datos --}}
                     <div class="grid sm:grid-cols-[5fr_6fr] gap-6 sm:gap-10 items-start">
                         <div class="min-w-0" x-data="{ activo: 0 }">
                             @if ($medios->isEmpty())
-                                <x-foto :inicial="$it['nombre']" :alt="$it['nombre']" proporcion="4/5" />
+                                <div class="ficha-foto rounded-foto"><x-foto :inicial="$it['nombre']" :alt="$it['nombre']" proporcion="4/5" /></div>
                             @else
                                 @foreach ($medios as $i => $m)
-                                    <div x-show="activo === {{ $i }}" @if ($i > 0) x-cloak @endif>
+                                    <div class="ficha-foto rounded-foto" x-show="activo === {{ $i }}" @if ($i > 0) x-cloak @endif>
                                         @if ($m->tipo === 'imagen')
                                             <x-foto :src="$m->url" :alt="$it['nombre'] . ', foto ' . ($i + 1)" proporcion="4/5" foco="50% 30%" :prioridad="$loop->parent->first && $i === 0" />
                                         @elseif ($m->esUrlExterna())
@@ -152,13 +152,13 @@
                         </div>
 
                         <div class="grid gap-6 min-w-0 content-start">
-                            <h2 id="nombre-{{ $it['id'] }}" class="text-[clamp(2.1rem,1.4rem+3vw,3.6rem)] leading-[1.02]">{{ $it['nombre'] }}</h2>
+                            <h2 id="nombre-{{ $it['id'] }}" class="ficha-entra text-[clamp(2.1rem,1.4rem+3vw,3.6rem)] leading-[1.02]">{{ $it['nombre'] }}</h2>
                             @if ($f['intro'])
-                                <p class="text-lg leading-relaxed">{{ $f['intro'] }}</p>
+                                <p class="ficha-entra text-lg leading-relaxed" style="--i: 1">{{ $f['intro'] }}</p>
                             @endif
 
                             @if ($f['duracion'] || $totalPasos)
-                                <dl class="grid grid-cols-2 border-y border-linea divide-x divide-linea">
+                                <dl class="ficha-entra grid grid-cols-2 border-y border-linea divide-x divide-linea" style="--i: 2">
                                     @if ($f['duracion'])
                                         <div class="py-4 pr-4">
                                             <dt class="text-sm text-texto-suave">Duración</dt>
@@ -175,7 +175,7 @@
                                 </dl>
                             @endif
 
-                            <div class="flex flex-wrap gap-3">
+                            <div class="ficha-entra flex flex-wrap gap-3" style="--i: 3">
                                 <x-boton :href="$urlReserva">Reservar este tratamiento</x-boton>
                                 @if ($waNumero)
                                     <x-boton variante="secundario" target="_blank" rel="noopener"
@@ -192,18 +192,18 @@
                         <div class="grid lg:grid-cols-[7fr_4fr] gap-10 lg:gap-14 items-start">
                             @if ($totalPasos)
                                 <div class="min-w-0">
-                                    <h3 class="text-[1.75rem] leading-tight mb-6">Paso a paso</h3>
-                                    <ol class="relative">
+                                    <h3 data-revelar="palabras" class="text-[1.75rem] leading-tight mb-6">Paso a paso</h3>
+                                    <ol class="pasos relative" data-progreso style="--n: {{ $totalPasos }}">
                                         @foreach ($f['pasos'] as $n => $paso)
                                             @php $c = $colorPaso($n, $totalPasos); $sig = $colorPaso(min($n + 1, $totalPasos - 1), $totalPasos); @endphp
-                                            <li class="relative grid grid-cols-[2.5rem_1fr] gap-4 pb-6 last:pb-0">
+                                            <li class="paso relative grid grid-cols-[2.5rem_1fr] gap-4 pb-6 last:pb-0" style="--i: {{ $n }}">
                                                 @unless ($loop->last)
-                                                    <span class="absolute left-[1.25rem] top-10 bottom-0 w-px -translate-x-1/2"
+                                                    <span class="paso-linea absolute left-[1.25rem] top-10 bottom-0 w-px"
                                                           style="background: linear-gradient({{ $c['fondo'] }}, {{ $sig['fondo'] }})" aria-hidden="true"></span>
                                                 @endunless
-                                                <span class="relative w-10 h-10 rounded-full grid place-items-center font-display text-lg tabular"
+                                                <span class="paso-punto relative w-10 h-10 rounded-full grid place-items-center font-display text-lg tabular"
                                                       style="background: {{ $c['fondo'] }}; color: {{ $c['texto'] }}" aria-hidden="true">{{ $n + 1 }}</span>
-                                                <span class="pt-2 leading-snug text-tinta"><span class="sr-only">Paso {{ $n + 1 }}: </span>{{ $paso }}</span>
+                                                <span class="paso-texto pt-2 leading-snug text-tinta"><span class="sr-only">Paso {{ $n + 1 }}: </span>{{ $paso }}</span>
                                             </li>
                                         @endforeach
                                     </ol>
@@ -211,7 +211,7 @@
                             @endif
 
                             @if (count($f['notas']))
-                                <aside class="rounded-2xl border border-linea bg-superficie p-6 grid gap-4" aria-label="Antes de reservar {{ $it['nombre'] }}">
+                                <aside data-revelar="sube" style="--d: 200ms" class="rounded-2xl border border-linea bg-superficie p-6 grid gap-4" aria-label="Antes de reservar {{ $it['nombre'] }}">
                                     <h3 class="font-display italic text-xl">Antes de reservar</h3>
                                     <ul class="grid gap-3 text-[0.9375rem] leading-relaxed">
                                         @foreach ($f['notas'] as $nota)
