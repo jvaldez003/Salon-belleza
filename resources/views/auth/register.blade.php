@@ -1,53 +1,43 @@
-<x-guest-layout>
-    <div class="mb-8">
-        <h2 class="text-3xl font-black text-warm-900 leading-tight">Únete a nosotros</h2>
-        <p class="text-warm-400 text-sm font-medium mt-1">Crea tu cuenta para empezar a disfrutar del lujo.</p>
+<x-guest-layout titulo="Crear cuenta">
+    <div class="grid gap-2 mb-8">
+        <h1 class="text-[2.6rem] leading-none">Crea tu cuenta</h1>
+        <p class="text-texto-suave">Con tu cuenta reservas en un minuto y consultas tus citas cuando quieras.</p>
     </div>
 
-    <form method="POST" action="{{ route('register') }}" class="space-y-5">
+    <form method="POST" action="{{ route('register') }}" class="grid gap-5">
         @csrf
 
-        <div class="space-y-1">
-            <label for="name" class="label ml-1">Nombre Completo</label>
-            <input id="name" type="text" name="name" :value="old('name')" required autofocus autocomplete="name"
-                   class="w-full bg-cream border-0 rounded-2xl py-4 px-6 focus:ring-2 focus:ring-rose-primary transition-all font-bold text-warm-900">
-            <x-input-error :messages="$errors->get('name')" class="mt-2" />
+        <div class="grid gap-1.5">
+            <x-input-label for="name" value="Nombre completo" />
+            <x-text-input id="name" type="text" name="name" :value="old('name')" required autofocus autocomplete="name" />
+            <x-input-error :messages="$errors->get('name')" />
         </div>
 
-        <div class="space-y-1">
-            <label for="email" class="label ml-1">Correo Electrónico</label>
-            <input id="email" type="email" name="email" :value="old('email')" required autocomplete="username"
-                   class="w-full bg-cream border-0 rounded-2xl py-4 px-6 focus:ring-2 focus:ring-rose-primary transition-all font-bold text-warm-900">
-            <x-input-error :messages="$errors->get('email')" class="mt-2" />
+        <div class="grid gap-1.5">
+            <x-input-label for="email" value="Correo electrónico" />
+            <x-text-input id="email" type="email" name="email" :value="old('email')" required autocomplete="username" />
+            <p class="text-xs text-texto-suave">Te enviaremos un enlace para confirmarlo.</p>
+            <x-input-error :messages="$errors->get('email')" />
         </div>
 
-        <div class="space-y-1">
-            <label for="password" class="label ml-1">Contraseña</label>
-            <input id="password" type="password" name="password" required autocomplete="new-password"
-                   class="w-full bg-cream border-0 rounded-2xl py-4 px-6 focus:ring-2 focus:ring-rose-primary transition-all font-bold text-warm-900">
-            <x-input-error :messages="$errors->get('password')" class="mt-2" />
+        <div class="grid gap-1.5">
+            <x-input-label for="password" value="Contraseña" />
+            <x-text-input id="password" type="password" name="password" required autocomplete="new-password" />
+            <p class="text-xs text-texto-suave">Mínimo 8 caracteres.</p>
+            <x-input-error :messages="$errors->get('password')" />
         </div>
 
-        <div class="space-y-1">
-            <label for="password_confirmation" class="label ml-1">Confirmar Contraseña</label>
-            <input id="password_confirmation" type="password" name="password_confirmation" required autocomplete="new-password"
-                   class="w-full bg-cream border-0 rounded-2xl py-4 px-6 focus:ring-2 focus:ring-rose-primary transition-all font-bold text-warm-900">
-            <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
+        <div class="grid gap-1.5">
+            <x-input-label for="password_confirmation" value="Repite la contraseña" />
+            <x-text-input id="password_confirmation" type="password" name="password_confirmation" required autocomplete="new-password" />
+            <x-input-error :messages="$errors->get('password_confirmation')" />
         </div>
 
-        <div class="pt-6">
-            <button type="submit" class="w-full bg-rose-primary hover:bg-rose-dark text-white font-black py-4 rounded-2xl shadow-sm transition-all active:scale-95 flex items-center justify-center">
-                Crear Mi Cuenta
-            </button>
-        </div>
-
-        <p class="text-center text-xs text-warm-400 pt-4 leading-relaxed">
-            Al registrarte recibirás un correo para confirmar tu cuenta antes de acceder al sistema.
-        </p>
-
-        <p class="text-center text-sm font-bold text-warm-400 pt-4">
-            ¿Ya tienes una cuenta?
-            <a href="{{ route('login') }}" class="text-rose-dark hover:text-rose-deeper">Inicia sesión</a>
-        </p>
+        <button type="submit" class="btn-primary w-full mt-2">Crear cuenta</button>
     </form>
+
+    <p class="mt-8 pt-6 border-t border-linea text-[0.9375rem] text-texto">
+        ¿Ya tienes cuenta?
+        <a href="{{ route('login') }}" class="font-semibold text-oceano hover:underline underline-offset-4">Entra aquí</a>
+    </p>
 </x-guest-layout>

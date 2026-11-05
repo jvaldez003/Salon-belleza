@@ -83,7 +83,7 @@ class AppServiceProvider extends ServiceProvider
         View::composer(['layouts.public', 'welcome', 'nosotros', 'protocolos-publico', 'citas.reservar'], function ($view) {
             $view->with('urlReserva', auth()->check()
                 ? route('citas.create')
-                : (\Illuminate\Support\Facades\Route::has('register') ? route('register') : route('login')));
+                : (\Illuminate\Support\Facades\Route::has('register') ? route('register', ['reservar' => 1]) : route('citas.create')));
         });
 
         Blade::if('admin', function () {

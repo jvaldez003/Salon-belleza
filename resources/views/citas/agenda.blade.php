@@ -1,128 +1,161 @@
-<x-app-layout>
+{{--
+    Agenda del salón (equipo). Vista "día": citas en orden con hora de inicio y fin, separadas en mañana y tarde.
+    Vista "semana": una columna por día que el salón atiende (tabla horarios).
+--}}
+@php
+    $ref       = $fechaBase ?? \Carbon\Carbon::parse($fecha);
+    $esSemana  = $vista === 'semana';
+    $abiertos  = \App\Models\Horario::where('activo', true)->pluck('dia')->map(fn ($d) => (int) $d)->all();
+    $especialistas = \App\Models\Empleado::pluck('nombre', 'id')->map(fn ($n) => Str::of($n)->explode(' ')->first());
+    $moneda    = fn ($v) => '$' . number_format($v, 0, ',', '.');
+    $horaFin   = function ($c) { $f = $c->horaFin(); return $f->format('g:i') . ($f->hour < 12 ? ' a. m.' : ' p. m.'); };
+    $conQuien  = fn ($c) => $c->servicios->pluck('pivot.empleado_id')->filter()->unique()->map(fn ($id) => $especialistas[$id] ?? null)->filter()->implode(', ');
+
+    $paso = $esSemana ? 'addWeek' : 'addDay';
+    $atras = $esSemana ? 'subWeek' : 'subDay';
+    $titulo = $esSemana
+        ? 'Semana del ' . $inicioSemana->translatedFormat('j \d\e F') . ' al ' . $finSemana->translatedFormat('j \d\e F')
+        : Str::ucfirst($ref->translatedFormat('l j \d\e F'));
+    $esHoyRango = $esSemana ? now()->between($inicioSemana, $finSemana) : $ref->isToday();
+@endphp
+
+<x-app-layout titulo="Agenda">
     <x-slot name="header">
-        <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-            <div>
-                <h1 class="font-black text-3xl text-warm-900">Agenda del Salón</h1>
-                <p class="text-warm-400 text-sm mt-1">
-                    @if($vista === 'semana')
-                        Semana del {{ $inicioSemana->format('d/m/Y') }} al {{ $finSemana->format('d/m/Y') }}
-                    @else
-                        {{ \Carbon\Carbon::parse($fecha)->locale('es')->isoFormat('dddd D [de] MMMM YYYY') }}
-                    @endif
-                </p>
+        <div class="flex flex-wrap items-end justify-between gap-4">
+            <div class="grid gap-1">
+                <h1 class="text-[clamp(2rem,1.5rem+2vw,3rem)] leading-none">Agenda</h1>
+                <p class="text-lg text-texto">{{ $titulo }}@if ($esHoyRango && ! $esSemana)<span class="text-texto-suave"> · hoy</span>@endif</p>
             </div>
-            <div class="flex flex-wrap items-center gap-3">
-                <div class="flex bg-cream rounded-2xl p-1">
-                    <a href="{{ route('citas.agenda', ['vista' => 'dia', 'fecha' => ($fechaBase ?? \Carbon\Carbon::parse($fecha))->format('Y-m-d')]) }}"
-                       class="px-5 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition {{ $vista === 'dia' ? 'bg-white text-rose-dark shadow-sm' : 'text-warm-500 hover:text-warm-800' }}">
-                        Día
-                    </a>
-                    <a href="{{ route('citas.agenda', ['vista' => 'semana', 'fecha' => ($fechaBase ?? \Carbon\Carbon::parse($fecha))->format('Y-m-d')]) }}"
-                       class="px-5 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition {{ $vista === 'semana' ? 'bg-white text-rose-dark shadow-sm' : 'text-warm-500 hover:text-warm-800' }}">
-                        Semana
-                    </a>
-                </div>
-                <a href="{{ route('citas.calendario') }}" class="bg-rose-light/20 text-rose-dark font-bold py-2.5 px-5 rounded-xl text-xs uppercase tracking-widest hover:bg-rose-light/40 transition">Calendario</a>
-            </div>
+            <x-boton :href="route('citas.create', ['fecha' => $ref->format('Y-m-d')])">Nueva cita</x-boton>
         </div>
     </x-slot>
 
-    <div class="py-12 bg-cream min-h-screen">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <form method="GET" class="mb-8 bg-white p-6 rounded-3xl border border-warm-200 flex flex-wrap gap-4 items-end">
-                <input type="hidden" name="vista" value="{{ $vista }}">
-                <div>
-                    <label class="label">
-                        {{ $vista === 'semana' ? 'Semana (cualquier día)' : 'Fecha' }}
-                    </label>
-                    <input type="date" name="fecha" value="{{ ($fechaBase ?? \Carbon\Carbon::parse($fecha))->format('Y-m-d') }}" class="mt-1 block rounded-xl border-warm-200 bg-cream focus:ring-rose-primary">
-                </div>
-                <div class="flex gap-2">
-                    @php $ref = ($fechaBase ?? \Carbon\Carbon::parse($fecha)); @endphp
-                    @if($vista === 'semana')
-                        <a href="{{ route('citas.agenda', ['vista' => 'semana', 'fecha' => $ref->copy()->subWeek()->format('Y-m-d')]) }}" class="bg-cream px-4 py-2.5 rounded-xl font-bold text-xs text-warm-700 hover:bg-warm-200 transition">← Sem. ant.</a>
-                        <a href="{{ route('citas.agenda', ['vista' => 'semana', 'fecha' => now()->format('Y-m-d')]) }}" class="bg-cream px-4 py-2.5 rounded-xl font-bold text-xs text-warm-700 hover:bg-warm-200 transition">Hoy</a>
-                        <a href="{{ route('citas.agenda', ['vista' => 'semana', 'fecha' => $ref->copy()->addWeek()->format('Y-m-d')]) }}" class="bg-cream px-4 py-2.5 rounded-xl font-bold text-xs text-warm-700 hover:bg-warm-200 transition">Sem. sig. →</a>
-                    @else
-                        <a href="{{ route('citas.agenda', ['vista' => 'dia', 'fecha' => $ref->copy()->subDay()->format('Y-m-d')]) }}" class="bg-cream px-4 py-2.5 rounded-xl font-bold text-xs text-warm-700 hover:bg-warm-200 transition">← Ayer</a>
-                        <a href="{{ route('citas.agenda', ['vista' => 'dia', 'fecha' => now()->format('Y-m-d')]) }}" class="bg-cream px-4 py-2.5 rounded-xl font-bold text-xs text-warm-700 hover:bg-warm-200 transition">Hoy</a>
-                        <a href="{{ route('citas.agenda', ['vista' => 'dia', 'fecha' => $ref->copy()->addDay()->format('Y-m-d')]) }}" class="bg-cream px-4 py-2.5 rounded-xl font-bold text-xs text-warm-700 hover:bg-warm-200 transition">Mañana →</a>
-                    @endif
-                </div>
-                <button type="submit" class="bg-warm-900 text-white px-6 py-2.5 rounded-xl font-bold text-xs uppercase hover:bg-warm-800 transition">Ver</button>
-            </form>
+    <div class="max-w-arrecife mx-auto px-4 sm:px-6 py-8 md:py-10 grid gap-6">
+        {{-- Controles: día/semana, anterior/hoy/siguiente, ir a una fecha --}}
+        <div class="flex flex-wrap items-center gap-3">
+            <div class="inline-flex p-1 rounded-full bg-bruma" role="group" aria-label="Tipo de vista">
+                @foreach (['dia' => 'Día', 'semana' => 'Semana'] as $v => $t)
+                    <a href="{{ route('citas.agenda', ['vista' => $v, 'fecha' => $ref->format('Y-m-d')]) }}"
+                       @if ($vista === $v) aria-current="page" @endif
+                       @class(['px-4 py-1.5 rounded-full text-[0.9375rem] font-medium transition-colors', 'bg-white text-oceano shadow-sm' => $vista === $v, 'text-texto hover:text-oceano' => $vista !== $v])>{{ $t }}</a>
+                @endforeach
+            </div>
 
-            @if($vista === 'semana')
-                <div class="grid grid-cols-1 md:grid-cols-7 gap-4">
-                    @foreach($diasSemana as $dia)
-                        @php
-                            $clave = $dia->format('Y-m-d');
-                            $citasDelDia = $citas->get($clave, collect());
-                            $esHoy = $dia->isToday();
-                            $esDomingo = $dia->dayOfWeekIso === 7;
-                        @endphp
-                        <div class="bg-white rounded-3xl border {{ $esHoy ? 'border-rose-primary ring-2 ring-rose-light/30' : 'border-warm-200' }} overflow-hidden min-h-[280px]">
-                            <div class="px-4 py-3 border-b border-warm-100 {{ $esHoy ? 'bg-rose-light/15' : 'bg-cream' }}">
-                                <p class="text-[10px] font-black uppercase tracking-widest text-warm-400">{{ $dia->locale('es')->isoFormat('ddd') }}</p>
-                                <p class="font-black text-lg {{ $esHoy ? 'text-rose-dark' : 'text-warm-900' }}">{{ $dia->format('d/m') }}</p>
+            <div class="inline-flex items-center gap-1">
+                <a href="{{ route('citas.agenda', ['vista' => $vista, 'fecha' => $ref->copy()->$atras()->format('Y-m-d')]) }}"
+                   class="w-10 h-10 grid place-items-center rounded-full border border-linea text-oceano hover:bg-bruma" aria-label="{{ $esSemana ? 'Semana anterior' : 'Día anterior' }}">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+                </a>
+                <a href="{{ route('citas.agenda', ['vista' => $vista, 'fecha' => now()->format('Y-m-d')]) }}"
+                   @class(['px-4 h-10 inline-flex items-center rounded-full border text-[0.9375rem] font-medium', 'border-oceano text-oceano' => ! $esHoyRango, 'border-linea text-texto-suave' => $esHoyRango])>Hoy</a>
+                <a href="{{ route('citas.agenda', ['vista' => $vista, 'fecha' => $ref->copy()->$paso()->format('Y-m-d')]) }}"
+                   class="w-10 h-10 grid place-items-center rounded-full border border-linea text-oceano hover:bg-bruma" aria-label="{{ $esSemana ? 'Semana siguiente' : 'Día siguiente' }}">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+                </a>
+            </div>
+
+            <form method="GET" class="inline-flex items-center gap-2 ml-auto" aria-label="Ir a una fecha">
+                <input type="hidden" name="vista" value="{{ $vista }}">
+                <label for="ir-fecha" class="sr-only">Ir a la fecha</label>
+                <input id="ir-fecha" type="date" name="fecha" value="{{ $ref->format('Y-m-d') }}" class="form-input py-2" onchange="this.form.submit()">
+                <noscript><button type="submit" class="btn-secondary">Ir</button></noscript>
+            </form>
+        </div>
+
+        @if ($esSemana)
+            {{-- ═════════ SEMANA ═════════ --}}
+            @php $diasVisibles = $diasSemana->filter(fn ($d) => in_array($d->dayOfWeekIso, $abiertos, true) || $citas->has($d->format('Y-m-d'))); @endphp
+            <div class="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 pb-2">
+                <div class="grid gap-3 min-w-[56rem]" style="grid-template-columns: repeat({{ max($diasVisibles->count(), 1) }}, minmax(0, 1fr))">
+                    @foreach ($diasVisibles as $dia)
+                        @php $lista = $citas->get($dia->format('Y-m-d'), collect()); $hoy = $dia->isToday(); @endphp
+                        <section @class(['card overflow-hidden flex flex-col min-h-[18rem]', '!border-oceano ring-1 ring-oceano' => $hoy]) aria-label="{{ $dia->translatedFormat('l j \d\e F') }}">
+                            <a href="{{ route('citas.agenda', ['vista' => 'dia', 'fecha' => $dia->format('Y-m-d')]) }}"
+                               @class(['px-4 py-3 border-b border-linea flex items-baseline justify-between gap-2 hover:bg-bruma', 'bg-bruma' => $hoy])>
+                                <span>
+                                    <span class="block text-xs text-texto-suave">{{ $hoy ? 'hoy' : $dia->translatedFormat('D') }}</span>
+                                    <span class="font-display text-2xl leading-none text-tinta tabular">{{ $dia->day }}</span>
+                                </span>
+                                <span class="text-xs text-texto-suave">{{ $lista->count() ?: '' }}{{ $lista->count() ? ($lista->count() === 1 ? ' cita' : ' citas') : '' }}</span>
+                            </a>
+                            <div class="p-2 grid grid-cols-1 gap-2 content-start flex-1 [&>*]:min-w-0">
+                                @forelse ($lista as $c)
+                                    <a href="{{ route('citas.show', $c) }}" class="block rounded-xl px-3 py-2 bg-bruma hover:bg-bruma-honda transition-colors border-l-[3px] {{ $c->estado === 'confirmada' ? 'border-oceano' : ($c->estado === 'completada' ? 'border-emerald-600' : 'border-agua') }}">
+                                        <span class="block text-sm font-semibold text-oceano tabular">{{ $c->hora_texto }}</span>
+                                        <span class="block text-sm text-tinta truncate">{{ $c->usuario?->name ?? 'Sin cliente' }}</span>
+                                        <span class="block text-xs text-texto-suave truncate">{{ $c->servicios_texto }}</span>
+                                    </a>
+                                @empty
+                                    <p class="m-auto text-sm text-texto-suave">{{ in_array($dia->dayOfWeekIso, $abiertos, true) ? 'Sin citas' : 'Cerrado' }}</p>
+                                @endforelse
                             </div>
-                            <div class="p-3 space-y-2">
-                                @if($esDomingo)
-                                    <p class="text-[10px] font-bold text-warm-300 uppercase text-center py-6">Cerrado</p>
-                                @elseif($citasDelDia->isEmpty())
-                                    <p class="text-[10px] font-bold text-warm-300 uppercase text-center py-6">Sin citas</p>
-                                @else
-                                    @foreach($citasDelDia as $cita)
-                                        <a href="{{ route('citas.show', $cita) }}" class="block p-3 rounded-2xl bg-cream hover:bg-rose-light/15 border border-warm-200 hover:border-rose-light transition">
-                                            <p class="font-black text-sm text-rose-dark">{{ substr($cita->hora, 0, 5) }}</p>
-                                            <p class="font-bold text-xs text-warm-800 truncate">{{ $cita->usuario?->name ?? '—' }}</p>
-                                            <p class="text-[10px] text-warm-500 truncate">{{ $cita->servicios->pluck('nombre')->implode(', ') }}</p>
-                                        </a>
-                                    @endforeach
-                                @endif
-                            </div>
-                        </div>
+                        </section>
                     @endforeach
                 </div>
-            @else
-                <div class="space-y-4">
-                    @php $totalDia = ($citasDia ?? collect())->sum('total'); @endphp
-                    <div class="bg-white p-6 rounded-3xl border border-warm-200 flex justify-between items-center">
-                        <div>
-                            <p class="text-[10px] font-black uppercase text-warm-400 tracking-widest">Resumen del día</p>
-                            <p class="font-black text-2xl text-warm-900">{{ ($citasDia ?? collect())->count() }} citas</p>
-                        </div>
-                        <div class="text-right">
-                            <p class="text-[10px] font-black uppercase text-warm-400 tracking-widest">Ingresos estimados</p>
-                            <p class="font-black text-2xl text-rose-dark">${{ number_format($totalDia, 0) }}</p>
-                        </div>
-                    </div>
+            </div>
+            <p class="text-sm text-texto-suave">Toca un día para verlo en detalle. El borde de cada cita indica su estado: azul océano confirmada, azul claro pendiente, verde completada.</p>
+        @else
+            {{-- ═════════ DÍA ═════════ --}}
+            @php
+                $lista = $citasDia ?? collect();
+                $abierto = in_array($ref->dayOfWeekIso, $abiertos, true);
+                $bloques = ['Mañana' => $lista->filter(fn ($c) => substr($c->hora, 0, 5) < '12:00'), 'Tarde' => $lista->filter(fn ($c) => substr($c->hora, 0, 5) >= '12:00')];
+            @endphp
 
-                    @forelse($citasDia ?? [] as $cita)
-                        <div class="bg-white p-6 rounded-3xl border border-warm-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:border-rose-light transition">
-                            <div class="flex items-start gap-4">
-                                <div class="bg-rose-light/20 text-rose-dark font-black text-lg px-4 py-3 rounded-2xl min-w-[80px] text-center">
-                                    {{ substr($cita->hora, 0, 5) }}
-                                </div>
-                                <div>
-                                    <p class="font-black text-lg text-warm-900">{{ $cita->usuario?->name ?? '—' }}</p>
-                                    <p class="text-sm text-warm-500">{{ $cita->servicios->pluck('nombre')->implode(', ') }}</p>
-                                    <span class="inline-block mt-2 px-3 py-1 rounded-full text-[10px] font-black uppercase bg-warm-100 text-warm-600">{{ $cita->estado }}</span>
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-4 sm:text-right w-full sm:w-auto justify-between sm:justify-end">
-                                <p class="font-black text-rose-dark text-xl">${{ number_format($cita->total, 0) }}</p>
-                                <a href="{{ route('citas.show', $cita) }}" class="text-rose-dark font-bold text-xs uppercase tracking-widest hover:underline">Ver →</a>
-                            </div>
+            <div class="grid lg:grid-cols-[minmax(0,1fr)_280px] gap-6 items-start">
+                <div class="grid gap-6 min-w-0">
+                    @if ($lista->isEmpty())
+                        <div class="card p-10 grid gap-4 justify-items-start">
+                            <p class="font-display text-2xl text-tinta">{{ $abierto ? 'No hay citas este día.' : 'El salón no atiende este día.' }}</p>
+                            @if ($abierto)
+                                <x-boton :href="route('citas.create', ['fecha' => $ref->format('Y-m-d')])">Agendar una cita</x-boton>
+                            @endif
                         </div>
-                    @empty
-                        <div class="bg-white p-12 rounded-3xl border border-warm-200 text-center">
-                            <p class="text-warm-400 font-medium">Sin citas programadas para este día.</p>
-                            <a href="{{ route('citas.calendario') }}" class="inline-block mt-4 text-rose-dark font-bold text-sm hover:underline">Ver calendario completo</a>
-                        </div>
-                    @endforelse
+                    @else
+                        @foreach ($bloques as $nombre => $grupo)
+                            @continue($grupo->isEmpty())
+                            <section aria-labelledby="b-{{ Str::slug($nombre) }}" class="grid gap-3">
+                                <h2 id="b-{{ Str::slug($nombre) }}" class="font-display italic text-xl text-oceano">{{ $nombre }}</h2>
+                                <ol class="card divide-y divide-linea overflow-hidden">
+                                    @foreach ($grupo as $c)
+                                        <li>
+                                            <a href="{{ route('citas.show', $c) }}" class="grid sm:grid-cols-[9.5rem_minmax(0,1fr)_auto] gap-x-6 gap-y-2 px-5 py-4 hover:bg-bruma transition-colors">
+                                                <span class="tabular">
+                                                    <span class="block font-display text-xl text-oceano leading-tight">{{ $c->hora_texto }}</span>
+                                                    <span class="block text-xs text-texto-suave">hasta {{ $horaFin($c) }}</span>
+                                                </span>
+                                                <span class="min-w-0">
+                                                    <span class="block font-semibold text-tinta">{{ $c->usuario?->name ?? 'Sin cliente' }}</span>
+                                                    <span class="block text-[0.9375rem] text-texto">{{ $c->servicios_texto }}</span>
+                                                    @if ($quien = $conQuien($c))<span class="block text-sm text-texto-suave">Con {{ $quien }}</span>@endif
+                                                    @if ($c->notas)<span class="block text-sm text-texto-suave italic mt-1 line-clamp-2">“{{ $c->notas }}”</span>@endif
+                                                </span>
+                                                <span class="flex sm:flex-col items-center sm:items-end gap-3 sm:gap-2">
+                                                    <x-estado-cita :estado="$c->estado" />
+                                                    <span class="font-display text-lg text-tinta tabular">{{ $moneda($c->total) }}</span>
+                                                </span>
+                                            </a>
+                                        </li>
+                                    @endforeach
+                                </ol>
+                            </section>
+                        @endforeach
+                    @endif
                 </div>
-            @endif
-        </div>
+
+                <aside class="card p-6 grid gap-4 lg:sticky lg:top-6" aria-label="Resumen del día">
+                    <h2 class="font-display text-xl">Resumen del día</h2>
+                    <dl class="grid gap-3">
+                        <div class="flex items-baseline justify-between gap-4"><dt class="text-texto-suave">Citas</dt><dd class="font-display text-3xl text-tinta tabular">{{ $lista->count() }}</dd></div>
+                        <div class="flex items-baseline justify-between gap-4"><dt class="text-texto-suave">Ingresos estimados</dt><dd class="font-display text-2xl text-oceano tabular">{{ $moneda($lista->sum('total')) }}</dd></div>
+                        @if ($lista->isNotEmpty())
+                            <div class="flex items-baseline justify-between gap-4"><dt class="text-texto-suave">Primera</dt><dd class="text-tinta tabular">{{ $lista->first()->hora_texto }}</dd></div>
+                            <div class="flex items-baseline justify-between gap-4"><dt class="text-texto-suave">Termina</dt><dd class="text-tinta tabular">{{ $horaFin($lista->sortBy(fn ($c) => $c->horaFin())->last()) }}</dd></div>
+                            <div class="flex items-baseline justify-between gap-4"><dt class="text-texto-suave">Por confirmar</dt><dd class="text-tinta tabular">{{ $lista->where('estado', 'pendiente')->count() }}</dd></div>
+                        @endif
+                    </dl>
+                </aside>
+            </div>
+        @endif
     </div>
 </x-app-layout>

@@ -1,96 +1,78 @@
-<x-app-layout>
+{{-- Estadísticas generales (admin). Las cifras son el contenido principal de esta página. --}}
+@php
+    $moneda = fn ($v) => '$' . number_format($v, 0, ',', '.');
+    $mes = Str::ucfirst(now()->translatedFormat('F'));
+    $roles = [
+        'Administradores'    => [$totalAdmins, 'bg-abismo'],
+        'Editores'           => [$totalEditores, 'bg-oceano'],
+        'Usuarios regulares' => [$totalUsuariosReg, 'bg-agua'],
+    ];
+@endphp
+
+<x-app-layout titulo="Estadísticas">
     <x-slot name="header">
-        <h1 class="font-black text-3xl text-warm-900 leading-tight">
-            {{ __('Estadísticas del Sistema') }}
-        </h1>
-        <p class="text-warm-500 text-sm mt-1">Métricas clave y distribución de usuarios por rol.</p>
+        <div class="flex flex-wrap items-end justify-between gap-4">
+            <div class="grid gap-1">
+                <h1 class="text-[clamp(2rem,1.5rem+2vw,3rem)] leading-none">Estadísticas</h1>
+                <p class="text-texto-suave">Datos al {{ now()->translatedFormat('j \d\e F') }}, {{ now()->format('g:i') }} {{ now()->hour < 12 ? 'a. m.' : 'p. m.' }}</p>
+            </div>
+            <x-boton variante="secundario" :href="route('reportes.index')">Ver reportes</x-boton>
+        </div>
     </x-slot>
 
-    <div class="py-12 bg-cream min-h-screen">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+    <div class="max-w-arrecife mx-auto px-4 sm:px-6 py-8 md:py-10 grid gap-8">
+        {{-- Cifras clave --}}
+        <section aria-label="Cifras clave" class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <a href="{{ route('citas.agenda') }}" class="card-hover p-6 grid gap-2">
+                <span class="text-sm text-texto-suave">Citas activas hoy</span>
+                <span class="font-display text-5xl text-tinta leading-none tabular">{{ $citasHoy }}</span>
+                <span class="text-sm font-semibold text-oceano">Ver agenda</span>
+            </a>
+            <div class="card p-6 grid gap-2 bg-abismo !border-abismo">
+                <span class="text-sm text-sobre-abismo-suave">Ingresos de {{ $mes }}</span>
+                <span class="font-display text-[clamp(1.8rem,1.2rem+1.8vw,2.6rem)] text-white leading-none tabular">{{ $moneda($ingresosMes) }}</span>
+                <span class="text-xs text-sobre-abismo-suave">Sin contar citas canceladas</span>
+            </div>
+            <a href="{{ route('servicios.index') }}" class="card-hover p-6 grid gap-2">
+                <span class="text-sm text-texto-suave">Servicios en el catálogo</span>
+                <span class="font-display text-5xl text-tinta leading-none tabular">{{ $totalServicios }}</span>
+                <span class="text-sm font-semibold text-oceano">Ver servicios</span>
+            </a>
+            <a href="{{ route('usuario.index') }}" class="card-hover p-6 grid gap-2">
+                <span class="text-sm text-texto-suave">Personas registradas</span>
+                <span class="font-display text-5xl text-tinta leading-none tabular">{{ $totalUsuarios }}</span>
+                <span class="text-sm font-semibold text-oceano">Ver usuarios</span>
+            </a>
+        </section>
 
-            <!-- Key Metrics -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <div class="bg-white p-6 rounded-[2rem] border border-warm-200 shadow-sm text-center">
-                    <span class="text-[10px] font-black text-rose-dark uppercase tracking-widest mb-2 block">Citas Hoy</span>
-                    <p class="text-4xl font-black text-rose-dark">{{ $citasHoy }}</p>
-                </div>
-                <div class="bg-white p-6 rounded-[2rem] border border-warm-200 shadow-sm text-center">
-                    <span class="text-[10px] font-black text-gold-dark uppercase tracking-widest mb-2 block">Ingresos del Mes</span>
-                    <p class="text-3xl font-black text-gold-dark">${{ number_format($ingresosMes, 0) }}</p>
-                </div>
-                <div class="md:col-span-2 flex gap-4">
-                    <a href="{{ route('citas.agenda') }}" class="flex-1 bg-warm-900 text-white rounded-2xl flex items-center justify-center font-black text-xs uppercase tracking-widest hover:bg-warm-800 transition">Agenda del día</a>
-                    <a href="{{ route('reportes.index') }}" class="flex-1 bg-rose-primary text-white rounded-2xl flex items-center justify-center font-black text-xs uppercase tracking-widest hover:bg-rose-dark transition">Reportes</a>
-                </div>
+        {{-- Distribución por rol --}}
+        <section class="card p-6 md:p-8 grid gap-6 max-w-3xl" aria-labelledby="t-roles">
+            <div class="flex flex-wrap items-baseline justify-between gap-2">
+                <h2 id="t-roles" class="text-2xl">Usuarios por rol</h2>
+                <p class="text-sm text-texto-suave">{{ $totalUsuarios }} en total</p>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-12">
-                <div class="bg-white p-6 rounded-[2rem] border border-warm-200 shadow-sm flex flex-col items-center text-center">
-                    <span class="text-[10px] font-black text-warm-400 uppercase tracking-widest mb-2">Total Usuarios</span>
-                    <p class="text-4xl font-black text-warm-900">{{ $totalUsuarios }}</p>
-                </div>
-                <div class="bg-white p-6 rounded-[2rem] border border-warm-200 shadow-sm flex flex-col items-center text-center">
-                    <span class="text-[10px] font-black text-rose-dark uppercase tracking-widest mb-2">Total Servicios</span>
-                    <p class="text-4xl font-black text-rose-dark">{{ $totalServicios }}</p>
-                </div>
-                <div class="bg-white p-6 rounded-[2rem] border border-warm-200 shadow-sm flex flex-col items-center text-center">
-                    <span class="text-[10px] font-black text-warm-500 uppercase tracking-widest mb-2">Administradores</span>
-                    <p class="text-4xl font-black text-warm-700">{{ $totalAdmins }}</p>
-                </div>
-                <div class="bg-white p-6 rounded-[2rem] border border-warm-200 shadow-sm flex flex-col items-center text-center">
-                    <span class="text-[10px] font-black text-gold-dark uppercase tracking-widest mb-2">Editores</span>
-                    <p class="text-4xl font-black text-gold-dark">{{ $totalEditores }}</p>
-                </div>
-                <div class="bg-white p-6 rounded-[2rem] border border-warm-200 shadow-sm flex flex-col items-center text-center">
-                    <span class="text-[10px] font-black text-warm-400 uppercase tracking-widest mb-2">Usuarios Reg.</span>
-                    <p class="text-4xl font-black text-warm-900">{{ $totalUsuariosReg }}</p>
-                </div>
+            {{-- Barra apilada --}}
+            <div class="flex h-3 rounded-full overflow-hidden bg-bruma" role="img"
+                 aria-label="{{ collect($roles)->map(fn ($r, $n) => $n . ': ' . $r[0])->implode(', ') }}">
+                @foreach ($roles as $nombre => [$cantidad, $color])
+                    @if ($cantidad > 0)
+                        <span class="{{ $color }} h-full" style="width: {{ $totalUsuarios ? $cantidad / $totalUsuarios * 100 : 0 }}%"></span>
+                    @endif
+                @endforeach
             </div>
 
-            <!-- Distribución -->
-            <div class="bg-white rounded-[2.5rem] shadow-sm border border-warm-200 overflow-hidden max-w-4xl mx-auto">
-                <div class="px-10 py-8 flex items-center justify-between"
-                     style="background: var(--gradient-main);">
-                    <h2 class="text-xl font-black text-white">Distribución por Rol</h2>
-                    <svg class="w-6 h-6 text-rose-light" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
-                </div>
-                <div class="overflow-x-auto p-2">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="bg-cream">
-                                <th class="px-10 py-5 text-[10px] font-black text-warm-400 uppercase tracking-[0.2em]">Métrica / Rol</th>
-                                <th class="px-10 py-5 text-[10px] font-black text-warm-400 uppercase tracking-[0.2em]">Cantidad</th>
-                                <th class="px-10 py-5 text-[10px] font-black text-warm-400 uppercase tracking-[0.2em] text-right">Porcentaje</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-warm-100">
-                            @foreach ($distribucion as $rol => $cantidad)
-                                <tr class="group hover:bg-cream transition-colors">
-                                    <td class="px-10 py-6 font-bold text-warm-900">{{ $rol }}</td>
-                                    <td class="px-10 py-6 font-black text-warm-900">{{ $cantidad }}</td>
-                                    <td class="px-10 py-6 text-right">
-                                        <div class="flex items-center justify-end space-x-3">
-                                            <div class="w-32 h-2 bg-warm-100 rounded-full overflow-hidden hidden sm:block">
-                                                <div class="h-full bg-rose-primary rounded-full" style="width: {{ $totalUsuarios > 0 ? ($cantidad / $totalUsuarios) * 100 : 0 }}%"></div>
-                                            </div>
-                                            <span class="text-sm font-black text-rose-dark">
-                                                {{ $totalUsuarios > 0 ? number_format(($cantidad / $totalUsuarios) * 100, 1) : 0 }}%
-                                            </span>
-                                        </div>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div class="mt-12 text-center">
-                <p class="text-warm-400 text-xs font-bold uppercase tracking-widest">
-                    Generado automáticamente · {{ now()->format('d/m/Y H:i:s') }}
-                </p>
-            </div>
-        </div>
+            <dl class="grid gap-3">
+                @foreach ($roles as $nombre => [$cantidad, $color])
+                    @php $pct = $totalUsuarios ? round($cantidad / $totalUsuarios * 100) : 0; @endphp
+                    <div class="grid grid-cols-[1rem_minmax(0,1fr)_auto_3.5rem] items-center gap-3">
+                        <span class="w-3 h-3 rounded-full {{ $color }}" aria-hidden="true"></span>
+                        <dt class="text-tinta">{{ $nombre }}</dt>
+                        <dd class="font-display text-xl text-tinta tabular">{{ $cantidad }}</dd>
+                        <dd class="text-sm text-texto-suave text-right tabular">{{ $pct }}%</dd>
+                    </div>
+                @endforeach
+            </dl>
+        </section>
     </div>
 </x-app-layout>

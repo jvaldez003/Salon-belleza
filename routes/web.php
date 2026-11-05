@@ -54,7 +54,11 @@ Route::get('/dashboard', function () {
         ->orderBy('hora')
         ->take(3)
         ->get();
-    return view('dashboard', compact('serviciosCount', 'usuariosCount', 'ultimosServicios', 'citasHoy', 'proximasCitas'));
+    // Equipo del salón: citas de hoy, en orden, para la agenda del inicio
+    $agendaHoy = (auth()->user()->isAdmin() || auth()->user()->isEditor())
+        ? \App\Models\Cita::with(['servicios', 'usuario'])->delDia()->activas()->orderBy('hora')->get()
+        : collect();
+    return view('dashboard', compact('serviciosCount', 'usuariosCount', 'ultimosServicios', 'citasHoy', 'proximasCitas', 'agendaHoy'));
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 // GESTIÓN DE PERFIL: Rutas estándar para el usuario logueado.

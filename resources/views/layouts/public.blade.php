@@ -6,6 +6,7 @@
         <meta name="theme-color" content="#F8FCFF">
         <title>@yield('title', $configuracionSitio->nombre_negocio ?? 'Arrecife') – @yield('subtitle', 'Arrecife Beauty Studio')</title>
         @include('partials.fuentes')
+        @include('partials.iconos')
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         <style>[x-cloak] { display: none !important; }</style>
         @stack('styles')

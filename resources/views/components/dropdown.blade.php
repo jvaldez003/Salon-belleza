@@ -36,7 +36,7 @@ switch ($width) {
             class="absolute z-50 mt-2 {{ $width }} rounded-2xl shadow-lg {{ $alignmentClasses }}"
             style="display: none;"
             @click="open = false">
-        <div class="rounded-2xl ring-1 ring-warm-200 {{ $contentClasses }}">
+        <div class="rounded-2xl ring-1 ring-linea {{ $contentClasses }}">
             {{ $content }}
         </div>
     </div>

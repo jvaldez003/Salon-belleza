@@ -59,6 +59,26 @@ class Cita extends Model
         return $this->horaInicio()->copy()->addMinutes($this->duracionMinutos());
     }
 
+    /** "viernes 6 de noviembre" (agrega el año si no es el actual). */
+    public function getFechaLargaAttribute(): string
+    {
+        $formato = $this->fecha->year === now()->year ? 'l j \d\e F' : 'l j \d\e F \d\e Y';
+        return $this->fecha->translatedFormat($formato);
+    }
+
+    /** "10:00 a. m." */
+    public function getHoraTextoAttribute(): string
+    {
+        $h = \Carbon\Carbon::createFromFormat('H:i', substr((string) $this->hora, 0, 5));
+        return $h->format('g:i') . ($h->hour < 12 ? ' a. m.' : ' p. m.');
+    }
+
+    /** Nombres públicos de los servicios: "Spa capilar, Cejas" */
+    public function getServiciosTextoAttribute(): string
+    {
+        return $this->servicios->map(fn ($s) => $s->nombre_publico)->implode(', ');
+    }
+
     public function scopeActivas($query)
     {
         return $query->whereNotIn('estado', ['cancelada']);

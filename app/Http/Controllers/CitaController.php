@@ -67,16 +67,18 @@ class CitaController extends Controller
                 ->whereDate('fecha', '<=', $request->end);
         }
 
+        // Colores del sistema Arrecife: [fondo, texto]
         $colores = [
-            'pendiente' => '#f59e0b',
-            'confirmada' => '#4f46e5',
-            'completada' => '#10b981',
+            'pendiente'  => ['#7FD8FF', '#0A2F6B'],  // agua clara
+            'confirmada' => ['#0E4A9E', '#FFFFFF'],  // océano
+            'completada' => ['#047857', '#FFFFFF'],  // verde (semántico)
         ];
 
         $eventos = $query->get()->map(function (Cita $cita) use ($colores) {
             $titulo = auth()->user()->isAdmin() || auth()->user()->isEditor()
-                ? ($cita->usuario?->name ?? 'Cliente').' — '.$cita->servicios->pluck('nombre')->implode(', ')
-                : $cita->servicios->pluck('nombre')->implode(', ');
+                ? ($cita->usuario?->name ?? 'Cliente').': '.$cita->servicios_texto
+                : $cita->servicios_texto;
+            [$fondo, $texto] = $colores[$cita->estado] ?? ['#546C8C', '#FFFFFF'];
 
             return [
                 'id' => $cita->id,
@@ -84,8 +86,9 @@ class CitaController extends Controller
                 'start' => $cita->horaInicio()->toIso8601String(),
                 'end' => $cita->horaFin()->toIso8601String(),
                 'url' => route('citas.show', $cita),
-                'backgroundColor' => $colores[$cita->estado] ?? '#64748b',
-                'borderColor' => $colores[$cita->estado] ?? '#64748b',
+                'backgroundColor' => $fondo,
+                'borderColor' => $fondo,
+                'textColor' => $texto,
                 'extendedProps' => [
                     'estado' => $cita->estado,
                     'total' => (float) $cita->total,
@@ -168,6 +171,12 @@ class CitaController extends Controller
         $cita->load('servicios', 'usuario');
 
         $cita->usuario?->notify(new CitaConfirmadaNotification($cita));
+
+        // La clienta ve el detalle de lo que acaba de reservar; el equipo vuelve a la lista
+        if (! $this->esEquipo()) {
+            return redirect()->route('citas.show', $cita)
+                ->with('success', 'Tu cita quedó reservada. Te confirmaremos por WhatsApp.');
+        }
 
         return redirect()->route('citas.index')->with('success', 'Cita reservada correctamente.');
     }

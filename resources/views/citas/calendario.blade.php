@@ -1,15 +1,29 @@
-<x-app-layout>
+{{--
+    Calendario mensual de citas (FullCalendar). La clienta ve las suyas; el equipo, todas.
+    Tocar un día que el salón atiende abre la reserva con esa fecha; tocar una cita abre su detalle.
+--}}
+@php
+    $esEquipo = auth()->user()->isAdmin() || auth()->user()->isEditor();
+    $horariosActivos = \App\Models\Horario::where('activo', true)->orderBy('dia')->get();
+    $diasLaborales = $horariosActivos->pluck('dia')->map(fn ($d) => (int) $d)->values()->all();
+    $diasOcultos = collect(range(1, 7))->diff($diasLaborales)->map(fn ($d) => $d === 7 ? 0 : $d)->values()->all();
+    $horarioNegocio = $horariosActivos->map(fn ($h) => [
+        'daysOfWeek' => [$h->dia === 7 ? 0 : $h->dia],
+        'startTime'  => substr($h->hora_apertura, 0, 5),
+        'endTime'    => substr($h->hora_cierre, 0, 5),
+    ])->values()->all();
+@endphp
+
+<x-app-layout titulo="Calendario">
     <x-slot name="header">
-        <div class="flex flex-col md:flex-row justify-between items-center gap-4">
-            <div>
-                <h1 class="font-black text-3xl text-warm-900 italic">Calendario de Citas</h1>
-                <p class="text-warm-500 text-sm mt-1">Visualiza tus citas y reserva haciendo clic en un día disponible.</p>
+        <div class="flex flex-wrap items-end justify-between gap-4">
+            <div class="grid gap-1">
+                <h1 class="text-[clamp(2rem,1.5rem+2vw,3rem)] leading-none">Calendario</h1>
+                <p class="text-texto-suave">Toca un día para reservar en esa fecha, o una cita para ver su detalle.</p>
             </div>
             <div class="flex flex-wrap gap-3">
-                @if(auth()->user()->isAdmin() || auth()->user()->isEditor())
-                    <a href="{{ route('citas.agenda') }}" class="bg-cream text-warm-800 font-bold py-3 px-6 rounded-2xl text-xs uppercase tracking-widest hover:bg-warm-200 transition">Agenda</a>
-                @endif
-                <a href="{{ route('citas.create') }}" class="text-white font-bold py-3 px-8 rounded-2xl text-xs uppercase tracking-widest transition shadow-lg" style="background:linear-gradient(135deg,#0A2F6B,#008FE8)">Nueva Cita</a>
+                @if ($esEquipo)<x-boton variante="secundario" :href="route('citas.agenda')">Agenda</x-boton>@endif
+                <x-boton :href="route('citas.create')">{{ $esEquipo ? 'Nueva cita' : 'Reservar cita' }}</x-boton>
             </div>
         </div>
     </x-slot>
@@ -17,85 +31,106 @@
     @push('styles')
         <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css" rel="stylesheet">
         <style>
-            #calendario-citas { --fc-border-color: #D9EAF2; --fc-today-bg-color: #EBF5FC; }
-            #calendario-citas .fc-toolbar-title { font-weight: 900; font-style: italic; color: #0A2F6B; }
-            #calendario-citas .fc-button-primary { background: #0A2F6B; border-color: #0A2F6B; font-weight: 700; text-transform: uppercase; font-size: 10px; letter-spacing: .1em; }
-            #calendario-citas .fc-button-primary:not(:disabled).fc-button-active,
-            #calendario-citas .fc-button-primary:not(:disabled):active { background: #0E4A9E; border-color: #0E4A9E; }
-            #calendario-citas .fc-event { border-radius: 8px; padding: 2px 4px; font-size: 11px; font-weight: 700; cursor: pointer; }
+            /* FullCalendar con los tokens de Arrecife */
+            #calendario-citas {
+                --fc-border-color: var(--linea);
+                --fc-today-bg-color: var(--bruma);
+                --fc-page-bg-color: #fff;
+                --fc-neutral-bg-color: var(--bruma);
+                --fc-button-bg-color: #fff;
+                --fc-button-border-color: var(--linea);
+                --fc-button-text-color: var(--oceano);
+                --fc-button-hover-bg-color: var(--bruma);
+                --fc-button-hover-border-color: var(--oceano);
+                --fc-button-active-bg-color: var(--oceano);
+                --fc-button-active-border-color: var(--oceano);
+                --fc-event-border-color: transparent;
+                font-family: Manrope, 'Segoe UI', sans-serif;
+                color: var(--texto);
+            }
+            #calendario-citas .fc-toolbar-title { font-family: 'Bodoni Moda', Georgia, serif; font-weight: 500; color: var(--abismo); font-size: 1.75rem; }
+            #calendario-citas .fc-toolbar-title::first-letter { text-transform: uppercase; }
+            #calendario-citas .fc-button { border-radius: 999px !important; padding: .45rem 1rem; font-weight: 600; font-size: .875rem; box-shadow: none !important; text-transform: none; }
+            #calendario-citas .fc-button-active { color: #fff !important; }
+            #calendario-citas .fc-button-group { gap: .25rem; }
+            #calendario-citas .fc-col-header-cell-cushion { color: var(--texto-suave); font-weight: 600; font-size: .8125rem; text-transform: capitalize; padding: .6rem 0; }
+            #calendario-citas .fc-daygrid-day-number { color: var(--tinta); font-family: 'Bodoni Moda', Georgia, serif; font-size: 1.05rem; padding: .4rem .6rem; }
+            #calendario-citas .fc-day-today .fc-daygrid-day-number { color: var(--oceano); font-weight: 700; }
+            #calendario-citas .fc-daygrid-day.fc-day-future:hover, #calendario-citas .fc-daygrid-day.fc-day-today:hover { background: var(--bruma); cursor: pointer; }
+            #calendario-citas .fc-event { border-radius: 8px; padding: 2px 6px; font-size: .78rem; font-weight: 600; cursor: pointer; }
+            #calendario-citas .fc-daygrid-event-dot { display: none; }
+            #calendario-citas .fc-daygrid-block-event .fc-event-main-frame { display: flex; gap: .35rem; min-width: 0; }
+            #calendario-citas .fc-event-time { flex-shrink: 0; font-weight: 700; }
+            #calendario-citas .fc-event-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+            #calendario-citas .fc-scrollgrid { border-radius: 14px; overflow: hidden; }
+            @media (max-width: 640px) {
+                #calendario-citas .fc-header-toolbar { flex-direction: column; gap: .75rem; align-items: stretch; }
+                #calendario-citas .fc-toolbar-title { font-size: 1.4rem; text-align: center; }
+                #calendario-citas .fc-toolbar-chunk { display: flex; justify-content: center; }
+            }
         </style>
     @endpush
 
-    <div class="py-12 bg-cream min-h-screen">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white p-6 md:p-10 rounded-[2.5rem] border border-warm-200 shadow-sm mb-6">
-                <div class="flex flex-wrap gap-4 text-xs font-black uppercase tracking-widest text-warm-500 mb-6">
-                    <span class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-amber-500"></span> Pendiente</span>
-                    <span class="flex items-center gap-2"><span class="w-3 h-3 rounded-full" style="background:#0A2F6B"></span> Confirmada</span>
-                    <span class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-emerald-500"></span> Completada</span>
-                </div>
-                <div id="calendario-citas"></div>
-            </div>
-            <p class="text-center text-sm text-warm-400 font-medium">
-                Haz clic en un día libre para reservar · Haz clic en una cita para ver detalles
-            </p>
+    <div class="max-w-arrecife mx-auto px-4 sm:px-6 py-8 md:py-10 grid gap-4">
+        <div class="flex flex-wrap items-center gap-3 text-sm" aria-label="Colores por estado">
+            <x-estado-cita estado="pendiente" />
+            <x-estado-cita estado="confirmada" />
+            <x-estado-cita estado="completada" />
+        </div>
+
+        <p id="calendario-aviso" class="alert-error hidden" role="alert"></p>
+
+        <div class="card p-3 sm:p-6">
+            <div id="calendario-citas"></div>
         </div>
     </div>
-
-    @php
-        $horariosActivos = \App\Models\Horario::where('activo', true)->orderBy('dia')->get();
-        $diasLaboralesJs = $horariosActivos->pluck('dia')->toArray();
-        $businessHours = $horariosActivos->map(fn($h) => [
-            'daysOfWeek' => [$h->dia === 7 ? 0 : $h->dia],
-            'startTime'  => substr($h->hora_apertura, 0, 5),
-            'endTime'    => substr($h->hora_cierre, 0, 5),
-        ])->values()->toArray();
-    @endphp
 
     @push('scripts')
         <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.11/locales/es.global.min.js"></script>
         <script>
             document.addEventListener('DOMContentLoaded', function () {
-                const calendarioEl = document.getElementById('calendario-citas');
-                const diasLaborales = @json($diasLaboralesJs);
+                const el = document.getElementById('calendario-citas');
+                const aviso = document.getElementById('calendario-aviso');
+                const diasLaborales = @json($diasLaborales);
+                const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+                const avisar = (texto) => { aviso.textContent = texto; aviso.classList.remove('hidden'); clearTimeout(avisar.t); avisar.t = setTimeout(() => aviso.classList.add('hidden'), 5000); };
+                const angosto = window.matchMedia('(max-width: 640px)').matches;
 
-                const calendario = new FullCalendar.Calendar(calendarioEl, {
+                const calendario = new FullCalendar.Calendar(el, {
                     locale: 'es',
-                    initialView: 'dayGridMonth',
-                    headerToolbar: {
-                        left: 'prev,next today',
-                        center: 'title',
-                        right: 'dayGridMonth,timeGridWeek,timeGridDay'
-                    },
+                    initialView: angosto ? 'listMonth' : 'dayGridMonth',
+                    headerToolbar: angosto
+                        ? { left: 'prev,next', center: 'title', right: 'today' }
+                        : { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,listMonth' },
+                    buttonText: { today: 'Hoy', month: 'Mes', week: 'Semana', list: 'Lista' },
+                    noEventsContent: 'No hay citas en este mes.',
+                    titleFormat: { month: 'long', year: 'numeric' },
+                    eventDisplay: 'block',
+                    dayMaxEvents: 3,
+                    moreLinkContent: (arg) => `${arg.num} más`,
                     height: 'auto',
                     navLinks: true,
-                    editable: false,
-                    selectable: true,
-                    businessHours: @json($businessHours),
-                    hiddenDays: [0],
+                    hiddenDays: @json($diasOcultos),
+                    businessHours: @json($horarioNegocio),
+                    slotMinTime: '07:00:00',
+                    slotMaxTime: '20:00:00',
+                    eventTimeFormat: { hour: 'numeric', minute: '2-digit', meridiem: 'short' },
                     events: {
-                        url: '{{ route('citas.eventos') }}',
-                        failure: () => alert('No se pudieron cargar las citas del calendario.'),
+                        url: @json(route('citas.eventos')),
+                        failure: () => avisar('No pudimos cargar las citas. Revisa tu conexión y recarga la página.'),
                     },
-                    dateClick: function (info) {
-                        const dia = info.date.getDay();
-                        const isoDay = dia === 0 ? 7 : dia;
-                        if (!diasLaborales.includes(isoDay)) {
-                            alert('El salón no atiende los domingos.');
-                            return;
-                        }
-                        const fecha = info.dateStr.substring(0, 10);
-                        window.location.href = `{{ route('citas.create') }}?fecha=${fecha}`;
+                    dateClick(info) {
+                        const dia = info.date.getDay() === 0 ? 7 : info.date.getDay();
+                        if (info.date < hoy) { avisar('Esa fecha ya pasó. Elige un día de hoy en adelante.'); return; }
+                        if (!diasLaborales.includes(dia)) { avisar('El salón no atiende ese día.'); return; }
+                        window.location.href = @json(route('citas.create')) + '?fecha=' + info.dateStr.substring(0, 10);
                     },
-                    eventClick: function (info) {
+                    eventClick(info) {
                         info.jsEvent.preventDefault();
-                        if (info.event.url) {
-                            window.location.href = info.event.url;
-                        }
+                        if (info.event.url) window.location.href = info.event.url;
                     },
                 });
-
                 calendario.render();
             });
         </script>

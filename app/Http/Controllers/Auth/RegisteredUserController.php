@@ -17,8 +17,14 @@ class RegisteredUserController extends Controller
     /**
      * Display the registration view.
      */
-    public function create(): View
+    public function create(Request $request): View
     {
+        // Si llega desde un botón "Reservar cita" (?reservar=1), al terminar el registro
+        // y confirmar el correo la persona vuelve directo al formulario de reserva.
+        if ($request->boolean('reservar')) {
+            $request->session()->put('url.intended', route('citas.create'));
+        }
+
         return view('auth.register');
     }
 

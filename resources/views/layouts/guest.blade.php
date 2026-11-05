@@ -2,48 +2,59 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
         <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
         <meta name="csrf-token" content="{{ csrf_token() }}">
-
-        <title>{{ config('app.name', 'Arrecife') }}</title>
-
-        <!-- Fonts -->
+        <meta name="theme-color" content="#F8FCFF">
+        <title>{{ $titulo ?? 'Tu cuenta' }} – {{ $configuracionSitio->nombre_negocio ?? 'Arrecife' }} Beauty Studio</title>
         @include('partials.fuentes')
-
-        <!-- Scripts -->
+        @include('partials.iconos')
         @vite(['resources/css/app.css', 'resources/js/app.js'])
-        <style>
-            [x-cloak] { display: none !important; }
-        </style>
+        <style>[x-cloak] { display: none !important; }</style>
     </head>
-    <body class="antialiased bg-cream text-warm-900">
-        <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 relative overflow-hidden">
-            <!-- Decorative Background -->
-            <div class="absolute top-0 right-0 w-1/2 h-1/2 bg-rose-light/20 rounded-bl-[20rem] -z-10"></div>
-            <div class="absolute bottom-0 left-0 w-1/2 h-1/2 bg-gold-light/10 rounded-tr-[20rem] -z-10"></div>
+    {{--
+        Acceso (entrar, crear cuenta, recuperar contraseña).
+        Escritorio: foto del estudio a la izquierda (azul abismo) y el formulario a la derecha.
+        Celular: solo el formulario, con la marca arriba.
+    --}}
+    <body class="min-h-screen bg-superficie">
+        <div class="min-h-screen grid lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
 
-            <div class="absolute top-8 left-8">
-                <a href="/" class="flex items-center text-warm-400 hover:text-rose-dark transition-colors font-bold text-xs uppercase tracking-widest group">
-                    <svg class="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
-                    Volver al Inicio
-                </a>
+            {{-- Foto del estudio --}}
+            <div class="hidden lg:block relative bg-abismo overflow-hidden">
+                @if (! empty($configuracionSitio->quienes_somos_imagen))
+                    <img src="{{ asset('storage/' . $configuracionSitio->quienes_somos_imagen) }}" alt=""
+                         class="absolute inset-0 w-full h-full object-cover object-[50%_30%] opacity-80">
+                @endif
+                <div class="absolute inset-0 bg-gradient-to-b from-abismo/85 via-abismo/25 via-40% to-abismo" aria-hidden="true"></div>
+                <div class="relative h-full flex flex-col justify-between p-12">
+                    <a href="{{ url('/') }}" aria-label="Ir al sitio de Arrecife"><x-marca tono="claro" /></a>
+                    <p class="font-display italic text-[1.75rem] leading-snug text-white max-w-[24ch]">
+                        Tu lugar para desconectarte del mundo y salir en tu mejor versión.
+                    </p>
+                </div>
             </div>
 
-            <div class="mb-10 text-center">
-                <a href="/">
-                    <span class="text-4xl font-black text-rose-dark tracking-tighter uppercase">Arrecife</span>
-                    <span class="text-4xl font-black text-warm-900 tracking-tighter"> Beauty</span>
-                </a>
-                <p class="text-warm-400 text-xs font-bold uppercase tracking-[0.3em] mt-2">Studio & Spa</p>
-            </div>
+            {{-- Formulario --}}
+            <div class="flex flex-col px-4 sm:px-6 pt-[max(1.5rem,env(safe-area-inset-top))] pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+                <div class="flex items-center justify-between gap-4">
+                    <a href="{{ url('/') }}" class="ml-auto inline-flex items-center gap-2 text-sm font-medium text-texto hover:text-oceano transition-colors">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+                        Volver al sitio
+                    </a>
+                </div>
 
-            <div class="w-full sm:max-w-md bg-white p-10 shadow-xl shadow-warm-200/50 rounded-[2.5rem] border border-warm-200">
-                {{ $slot }}
-            </div>
+                <main class="flex-1 grid place-items-center py-8">
+                    <div class="w-full max-w-[26rem]">
+                        {{-- Logo completo (vertical): solo sobre fondo claro, su texto es negro --}}
+                        <a href="{{ url('/') }}" class="block w-fit mb-8" aria-label="Ir al sitio de Arrecife">
+                            <img src="{{ asset('img/logo-completo.png') }}" alt="Arrecife Beauty Studio" width="527" height="600" class="h-28 w-auto">
+                        </a>
+                        {{ $slot }}
+                    </div>
+                </main>
 
-            <footer class="mt-10 text-warm-400 text-xs font-bold uppercase tracking-widest">
-                © {{ date('Y') }} Arrecife Beauty Studio. Todos los derechos reservados.
-            </footer>
+                <p class="text-xs text-texto-suave text-center">© {{ date('Y') }} {{ $configuracionSitio->nombre_negocio ?? 'Arrecife' }} Beauty Studio</p>
+            </div>
         </div>
     </body>
 </html>
