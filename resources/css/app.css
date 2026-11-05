@@ -316,3 +316,129 @@
 html:not(.js) .carta :is(.carta-palabra, .carta-aparece, .carta-foto, .carta-foto img, .carta-fila, .carta-guia, .carta-precio, .carta-acciones) {
     animation: none;
 }
+
+/* ── Animaciones al bajar (resources/js/revelar.js) ────────────────
+   Solo se ocultan cuando hay JavaScript (clase "js" en <html>): sin JS todo se ve normal. */
+[data-revelar] {
+    --curva: cubic-bezier(.16, 1, .3, 1);
+}
+.js [data-revelar="sube"] {
+    opacity: 0;
+    transform: translateY(28px);
+    filter: blur(6px);
+    transition: opacity 1s ease var(--d, 0ms), transform 1.2s var(--curva) var(--d, 0ms), filter 1s ease var(--d, 0ms);
+}
+.js [data-revelar="sube"][data-visto] {
+    opacity: 1;
+    transform: none;
+    filter: none;
+}
+
+.revelar-palabra {
+    display: inline-block;
+}
+.js [data-revelar="palabras"] .revelar-palabra {
+    transform: translateY(110%);
+    transition: transform 1.1s var(--curva) calc(var(--d, 0ms) + var(--i, 0) * 75ms);
+}
+.js [data-revelar="palabras"][data-visto] .revelar-palabra {
+    transform: none;
+}
+
+/* Foto que se descubre como agua que sube. Usa las propiedades "scale" y "translate" por separado,
+   para que el acercamiento (scale) y el paralaje (translate) no se pisen. */
+.js [data-revelar="foto"] {
+    clip-path: inset(100% 0 0 0 round 14px);
+    transition: clip-path 1.3s cubic-bezier(.7, 0, .2, 1) var(--d, 0ms);
+}
+.js [data-revelar="foto"] img,
+.js [data-revelar="foto"] .foto-respaldo {
+    scale: 1.25;
+    transition: scale 2s var(--curva) var(--d, 0ms);
+}
+.js [data-revelar="foto"][data-visto] {
+    clip-path: inset(0 0 0 0 round 14px);
+}
+.js [data-revelar="foto"][data-visto] img,
+.js [data-revelar="foto"][data-visto] .foto-respaldo {
+    scale: 1.12;
+}
+[data-paralaje] img {
+    translate: 0 var(--py, 0);
+    scale: 1.12;
+}
+
+.js [data-revelar="linea"] {
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 1.4s cubic-bezier(.65, 0, .35, 1) var(--d, 0ms);
+}
+.js [data-revelar="linea"][data-visto] {
+    transform: none;
+}
+
+[data-magnetico] {
+    transition: transform .6s var(--curva, cubic-bezier(.16, 1, .3, 1)), background-color .2s, color .2s, border-color .2s;
+}
+
+/* ── Profundidad: rayos de luz y partículas sobre el azul abismo ── */
+.abismo-luz {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 0;
+}
+.abismo-rayo {
+    position: absolute;
+    top: -20%;
+    height: 130%;
+    width: var(--w, 14%);
+    left: var(--x, 20%);
+    background: linear-gradient(180deg, rgb(127 216 255 / .22), rgb(127 216 255 / .06) 45%, transparent 75%);
+    transform-origin: top center;
+    transform: rotate(var(--r, 14deg));
+    filter: blur(14px);
+    mix-blend-mode: screen;
+    animation: abismo-mece var(--t, 11s) ease-in-out var(--dl, 0s) infinite alternate;
+}
+@keyframes abismo-mece {
+    from { transform: rotate(var(--r, 14deg)) translateX(-24px); opacity: .45; }
+    to   { transform: rotate(calc(var(--r, 14deg) - 5deg)) translateX(24px); opacity: 1; }
+}
+.abismo-particula {
+    position: absolute;
+    bottom: -12px;
+    left: var(--x, 50%);
+    width: var(--s, 3px);
+    height: var(--s, 3px);
+    border-radius: 9999px;
+    background: rgb(169 198 228 / .55);
+    box-shadow: 0 0 8px rgb(127 216 255 / .5);
+    animation: abismo-sube var(--t, 16s) linear var(--dl, 0s) infinite;
+    opacity: 0;
+}
+@keyframes abismo-sube {
+    0%   { transform: translate(0, 0); opacity: 0; }
+    10%  { opacity: .9; }
+    50%  { transform: translate(14px, -50vh); }
+    85%  { opacity: .6; }
+    100% { transform: translate(-6px, -95vh); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .js [data-revelar] { transition: none !important; }
+    .abismo-rayo, .abismo-particula { animation: none !important; }
+    .abismo-particula { display: none; }
+    [data-paralaje] img { translate: none; }
+}
+
+/* Texto que se entinta al bajar (data-revelar="lectura"): cada palabra pasa de tenue a su color
+   cuando el avance --p llega a su posición (--i de --n palabras). */
+.lectura-palabra {
+    opacity: clamp(.22, calc((var(--p, 1) * (var(--n, 1) + 6) - var(--i, 0)) / 6), 1);
+    transition: opacity .25s linear;
+}
+@media (prefers-reduced-motion: reduce) {
+    .lectura-palabra { opacity: 1; transition: none; }
+}

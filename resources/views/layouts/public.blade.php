@@ -106,7 +106,7 @@
             <div class="max-w-arrecife mx-auto px-4 sm:px-6">
                 <div class="py-14 grid gap-10 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr]">
 
-                    <div class="grid gap-5 content-start">
+                    <div class="grid gap-5 content-start" data-revelar="sube">
                         <a href="{{ url('/') }}" aria-label="Inicio"><x-marca tono="claro" /></a>
                         @if ($configuracionSitio->eslogan)
                             <p class="max-w-[36ch] text-[0.9375rem] leading-relaxed">{{ Str::legible($configuracionSitio->eslogan) }}</p>
@@ -124,7 +124,7 @@
                         @endif
                     </div>
 
-                    <nav aria-label="Pie de página">
+                    <nav aria-label="Pie de página" data-revelar="sube" style="--d: 120ms">
                         <p class="font-display italic text-lg text-white mb-4">Explorar</p>
                         <ul class="grid gap-2.5 text-[0.9375rem]">
                             @foreach ($enlaces as [$texto, $href])
@@ -134,7 +134,7 @@
                         </ul>
                     </nav>
 
-                    <div>
+                    <div data-revelar="sube" style="--d: 240ms">
                         <p class="font-display italic text-lg text-white mb-4">Contacto</p>
                         <ul class="grid gap-3 text-[0.9375rem]">
                             @if ($whatsappNumero)
@@ -158,7 +158,8 @@
                     </div>
                 </div>
 
-                <div class="py-6 border-t border-sobre-abismo-suave/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-sobre-abismo-suave/80">
+                <div class="h-px bg-sobre-abismo-suave/20" data-revelar="linea" style="--d: 300ms" aria-hidden="true"></div>
+                <div class="py-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-sobre-abismo-suave/80">
                     <p>© {{ date('Y') }} {{ $configuracionSitio->nombre_negocio ?? 'Arrecife' }} Beauty Studio</p>
                     @guest
                         <a href="{{ route('login') }}" class="hover:text-white transition-colors">Acceso del equipo</a>

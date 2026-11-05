@@ -239,15 +239,17 @@
 @if ($configuracionSitio->quienes_somos_texto)
 <section class="bg-gradient-to-b from-bruma via-bruma-honda via-[calc(100%-9rem)] to-abismo pt-14 md:pt-24 pb-36 md:pb-48" aria-labelledby="titulo-nosotros">
     <div class="max-w-arrecife mx-auto px-4 sm:px-6 grid md:grid-cols-[4fr_6fr] gap-8 md:gap-20 items-center">
-        <x-foto :src="$configuracionSitio->quienes_somos_imagen" alt="El equipo de Arrecife en el estudio" foco="50% 35%"
-                proporcion="3/4" class="aspect-[4/4.2] md:aspect-3/4 shadow-[0_30px_60px_-30px_rgb(10_47_107/.5)]" />
+        <div class="rounded-foto transition-shadow duration-1000 [&:has([data-visto])]:shadow-[0_30px_60px_-30px_rgb(10_47_107/.5)]">
+            <x-foto :src="$configuracionSitio->quienes_somos_imagen" alt="El equipo de Arrecife en el estudio" foco="50% 35%"
+                    proporcion="3/4" class="aspect-[4/4.2] md:aspect-3/4" data-revelar="foto" data-paralaje="0.12" />
+        </div>
         <div class="grid gap-5 min-w-0">
-            <h2 id="titulo-nosotros" class="text-[clamp(1.75rem,1.2rem+2.2vw,2.75rem)] leading-tight">
+            <h2 id="titulo-nosotros" data-revelar="palabras" style="--d: 200ms" class="text-[clamp(1.75rem,1.2rem+2.2vw,2.75rem)] leading-tight">
                 {{ Str::legible($configuracionSitio->quienes_somos_titulo ?: 'Quiénes somos') }}
             </h2>
-            <p class="max-w-[60ch] text-lg leading-relaxed">{{ Str::limit(Str::legible($configuracionSitio->quienes_somos_texto), 330) }}</p>
+            <p data-revelar="sube" style="--d: 450ms" class="max-w-[60ch] text-lg leading-relaxed">{{ Str::limit(Str::legible($configuracionSitio->quienes_somos_texto), 330) }}</p>
             @if ($tieneNosotros ?? false)
-                <div><x-boton variante="secundario" :href="route('nosotros')">Conocer el estudio</x-boton></div>
+                <div data-revelar="sube" style="--d: 600ms"><x-boton variante="secundario" :href="route('nosotros')">Conocer el estudio</x-boton></div>
             @endif
         </div>
     </div>
