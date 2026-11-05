@@ -33,7 +33,10 @@ export default {
                 laguna:  '#008FE8',               // enlaces, foco, acentos
                 agua:    '#7FD8FF',               // botones y detalles sobre fondo oscuro
                 oceano:  '#0E4A9E',               // botones primarios, precios
-                abismo:  '#0A2F6B',               // títulos, secciones oscuras, pie
+                abismo: {
+                    DEFAULT: '#0A2F6B',           // títulos, secciones oscuras, pie
+                    fondo:   '#071F49',           // el fondo del mar, al final del pie de página
+                },
                 tinta:   '#0A2F6B',               // color de títulos
                 texto: {
                     DEFAULT: '#2C4468',           // texto de párrafos

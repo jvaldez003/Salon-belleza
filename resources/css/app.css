@@ -481,3 +481,175 @@ html:not(.js) .carta :is(.carta-palabra, .carta-aparece, .carta-foto, .carta-fot
     .ficha-foto, .ficha-foto img, .ficha-foto .foto-respaldo, .ficha-entra { animation: none !important; }
     .pasos { --p: 1 !important; }
 }
+
+/* ── Arrecife del pie de página (<x-arrecife-fondo>) ────────────────
+   Bajo el agua lo lejano se ve más claro y difuso, lo cercano más oscuro y nítido;
+   lo muy cercano (primer plano) vuelve a desenfocarse, como en una foto submarina. */
+.arrecife-lejos   { color: rgb(27 79 150 / .55); filter: blur(2px); }
+.arrecife-lejos2  { opacity: .8; filter: blur(.8px); }
+.arrecife-frente  { fill: #030F2A; stroke: #030F2A; filter: blur(2.5px); }
+.arrecife-acento  { fill: rgb(127 216 255 / .34); }                 /* estrella de mar, peces de la anémona */
+.arrecife-textura { stroke: rgb(127 216 255 / .13); fill: none; }   /* surcos del coral cerebro */
+.arrecife-cardumen     { color: rgb(60 126 196 / .6); }
+.arrecife-manta-ruta   { fill: rgb(46 104 174 / .5); filter: blur(.6px); }
+
+/* Profundidad: al bajar (--py, revelar.js) y con el mouse (--mx/--my por --k de cada capa) */
+[data-profundidad] {
+    translate: calc(var(--mx, 0) * var(--k, 0) * -38px) calc(var(--py, 0px) + var(--my, 0) * var(--k, 0) * -10px);
+}
+
+/* Velo detrás del texto del pie: el arrecife lo rodea pero la información siempre se lee */
+.arrecife-velo {
+    background: linear-gradient(180deg, rgb(10 47 107 / .9), rgb(10 47 107 / .6) 70%, transparent);
+}
+@media (min-width: 768px) {
+    .arrecife-velo {
+        background: radial-gradient(ellipse 58% 62% at 50% 32%, rgb(10 47 107 / .88), rgb(10 47 107 / .55) 58%, transparent 82%);
+    }
+}
+
+/* Algas, abanicos, látigos y anémonas se mecen con la corriente */
+.arrecife-mece {
+    transform-box: fill-box;
+    transform-origin: 50% 100%;
+    animation: arrecife-mece var(--t, 8s) ease-in-out var(--dl, 0s) infinite alternate;
+}
+@keyframes arrecife-mece {
+    from { transform: rotate(calc(var(--a, 4deg) * -1)) skewX(calc(var(--a, 4deg) * -.4)); }
+    to   { transform: rotate(var(--a, 4deg)) skewX(calc(var(--a, 4deg) * .4)); }
+}
+
+/* Cardumen: cruza de derecha a izquierda y cada pez sube y baja un poco */
+.arrecife-cardumen { animation: arrecife-nada 58s linear infinite; }
+@keyframes arrecife-nada {
+    from { transform: translate(1520px, 206px); }
+    50%  { transform: translate(680px, 186px); }
+    to   { transform: translate(-200px, 200px); }
+}
+.arrecife-flota { animation: arrecife-flota 2.6s ease-in-out var(--dl, 0s) infinite alternate; }
+@keyframes arrecife-flota {
+    from { transform: translateY(-2px) rotate(-3deg); }
+    to   { transform: translateY(2px) rotate(3deg); }
+}
+
+/* Peces de la anémona: vueltas cortas cerca de casa */
+.arrecife-payaso { animation: arrecife-payaso 3.4s ease-in-out var(--dl, 0s) infinite alternate; }
+@keyframes arrecife-payaso {
+    from { transform: translate(-10px, 4px) rotate(4deg); }
+    to   { transform: translate(12px, -6px) rotate(-6deg); }
+}
+
+/* Tortuga: cruza cada ~70 s (nada 45 s y luego espera fuera de vista), con aleteo */
+.arrecife-tortuga-ruta { animation: arrecife-tortuga-ruta 70s linear -12s infinite; }
+@keyframes arrecife-tortuga-ruta {
+    0%   { transform: translate(1640px, 150px) rotate(4deg); }
+    32%  { transform: translate(980px, 128px) rotate(-2deg); }
+    64%  { transform: translate(-220px, 160px) rotate(3deg); }
+    100% { transform: translate(-220px, 160px); }
+}
+.arrecife-tortuga { animation: arrecife-flota 3.2s ease-in-out infinite alternate; }
+.tortuga-aleta, .tortuga-aleta-abajo, .tortuga-aleta-atras {
+    transform-box: fill-box;
+    animation: tortuga-aletea 2.4s ease-in-out infinite alternate;
+}
+.tortuga-aleta       { transform-origin: 100% 100%; }
+.tortuga-aleta-abajo { transform-origin: 100% 0%; animation-delay: -1.2s; }
+.tortuga-aleta-atras { transform-origin: 0% 100%; animation-duration: 3s; }
+@keyframes tortuga-aletea {
+    from { transform: rotate(-14deg); }
+    to   { transform: rotate(12deg); }
+}
+
+/* Mantarraya: planea lejos, de izquierda a derecha, con un leve aleteo */
+.arrecife-manta-ruta { animation: arrecife-manta-ruta 90s linear -40s infinite; }
+@keyframes arrecife-manta-ruta {
+    0%   { transform: translate(-160px, 112px) scale(.55); }
+    70%  { transform: translate(1620px, 92px) scale(.55); }
+    100% { transform: translate(1620px, 92px) scale(.55); }
+}
+.arrecife-manta {
+    transform-box: fill-box;
+    transform-origin: 50% 50%;
+    animation: arrecife-manta 4s ease-in-out infinite alternate;
+}
+@keyframes arrecife-manta {
+    from { transform: scaleY(1) rotate(-2deg); }
+    to   { transform: scaleY(.7) rotate(2deg); }
+}
+
+/* Caballito de mar */
+.arrecife-caballito {
+    transform-box: fill-box;
+    transform-origin: 50% 50%;
+    animation: arrecife-caballito 5.5s ease-in-out infinite alternate;
+}
+@keyframes arrecife-caballito {
+    from { transform: translateY(-5px) rotate(-4deg); }
+    to   { transform: translateY(5px) rotate(3deg); }
+}
+
+/* Medusas: flotan despacio, la campana late y los tentáculos ondulan */
+.arrecife-medusa {
+    position: absolute;
+    opacity: .85;
+    filter: drop-shadow(0 0 10px rgb(127 216 255 / .25));
+    animation: medusa-deriva var(--t, 14s) ease-in-out var(--dl, 0s) infinite alternate;
+}
+@keyframes medusa-deriva {
+    from { transform: translate(0, 18px) rotate(-5deg); }
+    to   { transform: translate(10px, -26px) rotate(4deg); }
+}
+.medusa-campana {
+    transform-box: fill-box;
+    transform-origin: 50% 100%;
+    animation: medusa-late 2.8s ease-in-out infinite;
+}
+@keyframes medusa-late {
+    0%, 100% { transform: scale(1, 1); }
+    45%      { transform: scale(1.08, .86); }
+}
+.medusa-tentaculos {
+    transform-box: fill-box;
+    transform-origin: 50% 0;
+    animation: medusa-ondula 2.8s ease-in-out infinite;
+}
+@keyframes medusa-ondula {
+    0%, 100% { transform: skewX(0) scaleY(1); }
+    50%      { transform: skewX(5deg) scaleY(1.04); }
+}
+
+/* Destellos de luz que se mueven sobre los corales */
+.arrecife-luz {
+    background-image:
+        radial-gradient(ellipse 46px 12px at 30% 40%, rgb(127 216 255 / .55), transparent 70%),
+        radial-gradient(ellipse 30px 9px at 75% 70%, rgb(127 216 255 / .45), transparent 70%),
+        radial-gradient(ellipse 60px 14px at 55% 15%, rgb(127 216 255 / .35), transparent 70%);
+    background-size: 260px 120px, 190px 90px, 340px 150px;
+    mix-blend-mode: screen;
+    opacity: .2;
+    -webkit-mask-image: linear-gradient(180deg, transparent 30%, #000 75%);
+            mask-image: linear-gradient(180deg, transparent 30%, #000 75%);
+    animation: arrecife-luz 18s linear infinite;
+}
+@keyframes arrecife-luz {
+    from { background-position: 0 0, 0 0, 0 0; }
+    to   { background-position: 260px 40px, -190px 30px, 340px -50px; }
+}
+
+/* En el celular: sin borde de luz (ahorra batería) */
+@media (max-width: 767px) {
+    .arrecife [filter] { filter: none; }
+}
+
+/* Fuera de pantalla no se anima nada (revelar.js pone data-fuera) */
+[data-fuera] *,
+[data-fuera]::before,
+[data-fuera]::after { animation-play-state: paused !important; }
+
+@media (prefers-reduced-motion: reduce) {
+    .arrecife *, .arrecife-luz { animation: none !important; }
+    .arrecife-cardumen     { transform: translate(980px, 196px); }
+    .arrecife-tortuga-ruta { transform: translate(1080px, 140px); }
+    .arrecife-manta-ruta   { transform: translate(420px, 100px) scale(.55); }
+    [data-profundidad] { translate: none; }
+}

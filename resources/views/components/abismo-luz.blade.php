@@ -2,12 +2,12 @@
     Rayos de luz que se mecen y partículas que suben, para secciones con fondo abismo
     (luz entrando bajo el agua). Decorativo: va como primer hijo de una sección con "relative isolate";
     el contenido de la sección debe llevar "relative z-10".
-    Uso: <x-abismo-luz />   ·   <x-abismo-luz :particulas="8" />
+    Uso: <x-abismo-luz />   ·   <x-abismo-luz :particulas="8" />   ·   <x-abismo-luz :rayos="false" /> (solo partículas)
 --}}
-@props(['particulas' => 14])
+@props(['particulas' => 14, 'rayos' => true])
 
 @php
-    $rayos = [
+    $listaRayos = ! $rayos ? [] : [
         ['x' => '8%',  'w' => '12%', 'r' => '16deg', 't' => '12s', 'dl' => '0s'],
         ['x' => '30%', 'w' => '7%',  'r' => '12deg', 't' => '9s',  'dl' => '-4s'],
         ['x' => '52%', 'w' => '16%', 'r' => '18deg', 't' => '14s', 'dl' => '-7s'],
@@ -18,7 +18,7 @@
 @endphp
 
 <div class="abismo-luz" aria-hidden="true">
-    @foreach ($rayos as $r)
+    @foreach ($listaRayos as $r)
         <span class="abismo-rayo" style="--x: {{ $r['x'] }}; --w: {{ $r['w'] }}; --r: {{ $r['r'] }}; --t: {{ $r['t'] }}; --dl: {{ $r['dl'] }}"></span>
     @endforeach
     @for ($n = 0; $n < $particulas; $n++)

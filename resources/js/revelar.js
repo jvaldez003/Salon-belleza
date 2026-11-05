@@ -11,6 +11,10 @@
  *   data-progreso             recibe --p de 0 a 1 según cuánto se ha bajado por él (p. ej. el paso a paso)
  *   data-paralaje="0.1"       la foto de adentro se mueve más lento que la página (profundidad)
  *   data-magnetico            el botón se acerca un poco al cursor
+ *   data-profundidad="0.1"    el propio elemento se mueve con la página a otra velocidad (capas del arrecife)
+ *   data-raton-profundidad    contenedor: pone --mx y --my (-1 a 1) según el mouse, con retraso suave;
+ *                             sus capas con data-profundidad y --k se desplazan distinto (ilusión de 3D)
+ *   data-pausar-fuera         sus animaciones CSS se pausan cuando no está en pantalla (recibe data-fuera)
  *
  * Cada elemento se anima una sola vez, cuando entra en pantalla (recibe data-visto).
  * Con "reducir movimiento" todo se muestra de inmediato y sin paralaje ni efecto magnético.
@@ -85,7 +89,7 @@ function iniciarRevelar() {
 }
 
 function iniciarParalaje() {
-    const elementos = [...document.querySelectorAll('[data-paralaje]')];
+    const elementos = [...document.querySelectorAll('[data-paralaje], [data-profundidad]')];
     if (!elementos.length || reducir()) return;
 
     const visibles = new Set();
@@ -106,7 +110,7 @@ function iniciarParalaje() {
             const r = el.getBoundingClientRect();
             // -1 cuando el centro está abajo de la pantalla, 1 cuando está arriba
             const pos = ((r.top + r.height / 2) - alto / 2) / (alto / 2 + r.height / 2);
-            const factor = parseFloat(el.dataset.paralaje) || .1;
+            const factor = parseFloat(el.dataset.paralaje ?? el.dataset.profundidad) || .1;
             el.style.setProperty('--py', `${(-pos * factor * r.height).toFixed(1)}px`);
         });
     };
@@ -157,7 +161,40 @@ function iniciarLectura() {
     actualizar();
 }
 
+function iniciarPausaFuera() {
+    const elementos = document.querySelectorAll('[data-pausar-fuera]');
+    if (!elementos.length || !('IntersectionObserver' in window)) return;
+    const obs = new IntersectionObserver((entradas) => {
+        entradas.forEach((e) => e.target.toggleAttribute('data-fuera', !e.isIntersecting));
+    });
+    elementos.forEach((el) => { el.setAttribute('data-fuera', ''); obs.observe(el); });
+}
+
+function iniciarRatonProfundidad() {
+    if (reducir() || !window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+    document.querySelectorAll('[data-raton-profundidad]').forEach((el) => {
+        let meta = { x: 0, y: 0 }, actual = { x: 0, y: 0 }, andando = false;
+        const paso = () => {
+            actual.x += (meta.x - actual.x) * .06;
+            actual.y += (meta.y - actual.y) * .06;
+            el.style.setProperty('--mx', actual.x.toFixed(4));
+            el.style.setProperty('--my', actual.y.toFixed(4));
+            if (Math.abs(meta.x - actual.x) + Math.abs(meta.y - actual.y) > .002) requestAnimationFrame(paso);
+            else andando = false;
+        };
+        const arrancar = () => { if (!andando) { andando = true; requestAnimationFrame(paso); } };
+        el.addEventListener('pointermove', (e) => {
+            const r = el.getBoundingClientRect();
+            meta = { x: ((e.clientX - r.left) / r.width) * 2 - 1, y: ((e.clientY - r.top) / r.height) * 2 - 1 };
+            arrancar();
+        });
+        el.addEventListener('pointerleave', () => { meta = { x: 0, y: 0 }; arrancar(); });
+    });
+}
+
 export function iniciarAnimacionesPagina() {
+    iniciarPausaFuera();
+    iniciarRatonProfundidad();
     iniciarLectura();
     iniciarRevelar();
     iniciarParalaje();

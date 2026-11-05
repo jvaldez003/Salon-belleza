@@ -102,8 +102,13 @@
         @yield('cta')
 
         {{-- ── Pie de página (abismo) ─────────────────────────── --}}
-        <footer class="bg-abismo text-sobre-abismo-suave pb-[env(safe-area-inset-bottom)]">
-            <div class="max-w-arrecife mx-auto px-4 sm:px-6">
+        <footer data-raton-profundidad class="relative isolate overflow-hidden bg-gradient-to-b from-abismo from-40% to-abismo-fondo text-sobre-abismo-suave pb-[env(safe-area-inset-bottom)]">
+            {{-- El fondo del mar: el final del descenso. Burbujas que suben desde el arrecife. --}}
+            <x-arrecife-fondo />
+            <x-abismo-luz :rayos="false" :particulas="12" />
+            {{-- Velo detrás del texto: el arrecife lo rodea pero la información siempre se lee --}}
+            <div class="arrecife-velo absolute inset-0 pointer-events-none" aria-hidden="true"></div>
+            <div class="relative z-10 max-w-arrecife mx-auto px-4 sm:px-6">
                 <div class="py-14 grid gap-10 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr]">
 
                     <div class="grid gap-5 content-start" data-revelar="sube">
@@ -165,6 +170,8 @@
                         <a href="{{ route('login') }}" class="hover:text-white transition-colors">Acceso del equipo</a>
                     @endguest
                 </div>
+                {{-- Espacio para que el arrecife se vea completo debajo del texto --}}
+                <div class="h-40 md:h-72" aria-hidden="true"></div>
             </div>
         </footer>
 
