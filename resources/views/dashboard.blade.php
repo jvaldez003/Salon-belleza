@@ -58,7 +58,7 @@
                 <div class="grid gap-4">
                     <div class="card p-6 grid gap-1">
                         <p class="text-sm text-texto-suave">Citas activas hoy</p>
-                        <p class="font-display text-5xl text-tinta leading-none tabular">{{ $citasHoy }}</p>
+                        <p class="text-5xl font-semibold tracking-tight text-tinta leading-none tabular">{{ $citasHoy }}</p>
                     </div>
                     <nav aria-label="Accesos rápidos" class="card p-2 grid">
                         @php

@@ -4,8 +4,8 @@
     $mes = Str::ucfirst(now()->translatedFormat('F'));
     $roles = [
         'Administradores'    => [$totalAdmins, 'bg-abismo'],
-        'Editores'           => [$totalEditores, 'bg-oceano'],
-        'Usuarios regulares' => [$totalUsuariosReg, 'bg-agua'],
+        'Recepción'          => [$totalEditores, 'bg-oceano'],
+        'Clientes'           => [$totalUsuariosReg, 'bg-agua'],
     ];
 @endphp
 
@@ -25,7 +25,7 @@
         <section aria-label="Cifras clave" class="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <a href="{{ route('citas.agenda') }}" class="card-hover p-6 grid gap-2">
                 <span class="text-sm text-texto-suave">Citas activas hoy</span>
-                <span class="font-display text-5xl text-tinta leading-none tabular">{{ $citasHoy }}</span>
+                <span class="text-5xl font-semibold tracking-tight text-tinta leading-none tabular">{{ $citasHoy }}</span>
                 <span class="text-sm font-semibold text-oceano">Ver agenda</span>
             </a>
             <div class="card p-6 grid gap-2 bg-abismo !border-abismo">
@@ -35,12 +35,12 @@
             </div>
             <a href="{{ route('servicios.index') }}" class="card-hover p-6 grid gap-2">
                 <span class="text-sm text-texto-suave">Servicios en el catálogo</span>
-                <span class="font-display text-5xl text-tinta leading-none tabular">{{ $totalServicios }}</span>
+                <span class="text-5xl font-semibold tracking-tight text-tinta leading-none tabular">{{ $totalServicios }}</span>
                 <span class="text-sm font-semibold text-oceano">Ver servicios</span>
             </a>
             <a href="{{ route('usuario.index') }}" class="card-hover p-6 grid gap-2">
                 <span class="text-sm text-texto-suave">Personas registradas</span>
-                <span class="font-display text-5xl text-tinta leading-none tabular">{{ $totalUsuarios }}</span>
+                <span class="text-5xl font-semibold tracking-tight text-tinta leading-none tabular">{{ $totalUsuarios }}</span>
                 <span class="text-sm font-semibold text-oceano">Ver usuarios</span>
             </a>
         </section>
@@ -68,7 +68,7 @@
                     <div class="grid grid-cols-[1rem_minmax(0,1fr)_auto_3.5rem] items-center gap-3">
                         <span class="w-3 h-3 rounded-full {{ $color }}" aria-hidden="true"></span>
                         <dt class="text-tinta">{{ $nombre }}</dt>
-                        <dd class="font-display text-xl text-tinta tabular">{{ $cantidad }}</dd>
+                        <dd class="text-lg font-semibold text-tinta tabular">{{ $cantidad }}</dd>
                         <dd class="text-sm text-texto-suave text-right tabular">{{ $pct }}%</dd>
                     </div>
                 @endforeach

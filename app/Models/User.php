@@ -31,6 +31,18 @@ class User extends Authenticatable implements MustVerifyEmail
         'activo',
     ];
 
+    /** Roles con el nombre y la explicación que ve el administrador. */
+    public const ROLES = [
+        'usuario' => ['nombre' => 'Cliente',       'detalle' => 'Reserva citas y ve las suyas.'],
+        'editor'  => ['nombre' => 'Recepción',     'detalle' => 'Ve la agenda y gestiona las citas de todos los clientes.'],
+        'admin'   => ['nombre' => 'Administrador', 'detalle' => 'Todo lo anterior, más servicios, equipo, usuarios, reportes y configuración del sitio.'],
+    ];
+
+    public function getRolNombreAttribute(): string
+    {
+        return self::ROLES[$this->role]['nombre'] ?? ucfirst((string) $this->role);
+    }
+
     /**
      * Helper: Verifica si el usuario es Administrador.
      */

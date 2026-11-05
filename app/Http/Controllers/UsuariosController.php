@@ -2,153 +2,166 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Routing\Controller;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 /**
- * Controlador UsuariosController
- * 
- * Centraliza la administración de los usuarios del sistema.
- * Implementa el Control de Acceso Basado en Roles (RBAC) definido en el manual.
+ * Administración de cuentas (solo administradores).
+ * Protege contra quedarse sin administradores o bloquearse a uno mismo.
  */
 class UsuariosController extends Controller
 {
-    /**
-     * Muestra la tabla principal de usuarios.
-     * Solo accesible por administradores.
-     */
     public function index(Request $request)
     {
-        $query = User::query();
+        $query = User::withCount('citas');
 
         if ($request->filled('buscar')) {
             $buscar = $request->buscar;
-            $query->where(function ($q) use ($buscar) {
-                $q->where('name', 'like', "%{$buscar}%")
-                    ->orWhere('email', 'like', "%{$buscar}%")
-                    ->orWhere('role', 'like', "%{$buscar}%");
-            });
+            $query->where(fn ($q) => $q->where('name', 'like', "%{$buscar}%")
+                ->orWhere('email', 'like', "%{$buscar}%")
+                ->orWhere('telefono', 'like', "%{$buscar}%"));
+        }
+
+        if (array_key_exists($request->rol, User::ROLES)) {
+            $query->where('role', $request->rol);
         }
 
         if ($request->filled('activo')) {
             $query->where('activo', $request->activo === '1');
         }
 
-        $users = $query->orderBy('name')->get();
+        $users   = $query->orderByRaw("FIELD(role, 'admin', 'editor', 'usuario')")->orderBy('name')->get();
+        $totales = User::selectRaw('role, count(*) as total')->groupBy('role')->pluck('total', 'role');
 
-        return view('usuario.index', compact('users'));
+        return view('usuario.index', compact('users', 'totales'));
     }
 
-    /**
-     * Muestra el formulario para crear un nuevo usuario.
-     * El acceso a este método está restringido solo a Administradores en web.php.
-     */
     public function create()
     {
         return view('usuario.create');
     }
 
-    /**
-     * Procesa el registro de un nuevo usuario en la base de datos.
-     * Encripta la contraseña usando Bcrypt para seguridad.
-     */
     public function store(Request $request)
     {
-        // Validación estricta de datos de usuario
         $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users',
-            'password' => 'required|min:8',
-            'role' => 'required|in:admin,editor,usuario', // Solo acepta estos 3 roles
-        ]);
+            'name'     => 'required|string|max:255',
+            'email'    => 'required|email|unique:users',
+            'telefono' => 'nullable|string|max:15',
+            'password' => 'required|min:8|confirmed',
+            'role'     => ['required', Rule::in(array_keys(User::ROLES))],
+        ], $this->mensajes());
 
-        User::create([
-            'name' => $request['name'],
-            'email' => $request['email'],
-            'password' => Hash::make($request['password']),
-            'role' => $request['role'],
+        $user = User::create([
+            'name'              => $request->name,
+            'email'             => $request->email,
+            'telefono'          => $request->telefono,
+            'password'          => Hash::make($request->password),
+            'role'              => $request->role,
+            'activo'            => true,
             'email_verified_at' => now(),
         ]);
 
-        return redirect('/usuario')->with('success', 'Usuario creado exitosamente');
+        return redirect()->route('usuario.show', $user->id)->with('success', "Creaste la cuenta de {$user->name}.");
     }
 
-    /**
-     * Muestra el detalle de un usuario específico.
-     * En la versión actual, esta información se muestra mediante un Slide-over en el index,
-     * pero esta ruta se mantiene para compatibilidad y acceso directo.
-     */
     public function show($id)
     {
-        $user = User::findOrFail($id);
-        return view('usuario.show', ['user' => $user]);
+        $user = User::withCount('citas')->findOrFail($id);
+        $citas = $user->citas()->with('servicios')->orderByDesc('fecha')->orderByDesc('hora')->limit(8)->get();
+
+        return view('usuario.show', compact('user', 'citas'));
     }
 
-    /**
-     * Muestra el formulario para editar datos de un usuario.
-     * Accesible solo por administradores.
-     */
     public function edit($id)
     {
-        $user = User::findOrFail($id);
-        return view('usuario.edit', ['user' => $user]);
+        return view('usuario.edit', ['user' => User::findOrFail($id)]);
     }
 
-    /**
-     * Procesa los cambios en el perfil de un usuario.
-     * Solo actualiza la contraseña si se proporciona un nuevo valor.
-     */
     public function update(Request $request, $id)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $id,
-            'password' => 'nullable|min:8',
-            'role' => 'required|in:admin,editor,usuario',
-            'telefono' => 'nullable|string|max:15',
-            'activo' => 'nullable|boolean',
-        ]);
-
         $user = User::findOrFail($id);
-        $user->name = $request->name;
-        $user->email = $request->email;
-        $user->role = $request->role;
-        $user->telefono = $request->telefono;
 
-        if ($request->has('activo')) {
-            $user->activo = $request->boolean('activo');
+        $request->validate([
+            'name'     => 'required|string|max:255',
+            'email'    => 'required|email|unique:users,email,' . $user->id,
+            'telefono' => 'nullable|string|max:15',
+            'password' => 'nullable|min:8|confirmed',
+            'role'     => ['required', Rule::in(array_keys(User::ROLES))],
+        ], $this->mensajes());
+
+        if ($user->isAdmin() && $request->role !== 'admin') {
+            $this->exigirOtroAdmin($user, 'role', 'No puedes quitarle el rol de administrador: es el único que queda.');
+            if ($user->is(auth()->user())) {
+                throw ValidationException::withMessages(['role' => 'No puedes quitarte tu propio rol de administrador.']);
+            }
         }
 
-        // Si el campo de contraseña no está vacío, la actualizamos
-        if ($request->password) {
+        $user->fill($request->only('name', 'email', 'telefono', 'role'));
+        if ($request->filled('password')) {
             $user->password = Hash::make($request->password);
         }
-
         $user->save();
 
-        return redirect('/usuario')->with('success', 'Usuario actualizado exitosamente');
+        return redirect()->route('usuario.show', $user->id)->with('success', 'Guardaste los cambios.');
     }
 
-    /**
-     * Elimina un usuario del sistema permanentemente.
-     * Método restringido exclusivamente al Administrador.
-     */
     public function destroy($id)
     {
-        User::destroy($id);
-        return redirect('/usuario')->with('success', 'Usuario eliminado exitosamente');
+        $user = User::findOrFail($id);
+
+        if ($user->is(auth()->user())) {
+            return back()->with('error', 'No puedes eliminar tu propia cuenta desde aquí.');
+        }
+        if ($user->isAdmin() && User::where('role', 'admin')->count() <= 1) {
+            return back()->with('error', 'No puedes eliminar al único administrador.');
+        }
+
+        $nombre = $user->name;
+        $user->delete();
+
+        return redirect()->route('usuario.index')->with('success', "Eliminaste la cuenta de {$nombre}. Sus citas se conservan sin cliente asignado.");
     }
 
     public function toggleActivo($id)
     {
         $user = User::findOrFail($id);
+
+        if ($user->is(auth()->user())) {
+            return back()->with('error', 'No puedes desactivar tu propia cuenta.');
+        }
+        if ($user->activo && $user->isAdmin() && User::where('role', 'admin')->where('activo', true)->count() <= 1) {
+            return back()->with('error', 'No puedes desactivar al único administrador activo.');
+        }
+
         $user->activo = ! $user->activo;
         $user->save();
 
-        $estado = $user->activo ? 'activado' : 'desactivado';
+        return back()->with('success', $user->activo
+            ? "{$user->name} ya puede volver a entrar."
+            : "{$user->name} ya no puede entrar. Sus datos y citas se conservan.");
+    }
 
-        return redirect()->route('usuario.index')->with('success', "Usuario {$estado} correctamente.");
+    private function exigirOtroAdmin(User $user, string $campo, string $mensaje): void
+    {
+        if (User::where('role', 'admin')->whereKeyNot($user->id)->doesntExist()) {
+            throw ValidationException::withMessages([$campo => $mensaje]);
+        }
+    }
+
+    private function mensajes(): array
+    {
+        return [
+            'name.required'      => 'Escribe el nombre.',
+            'email.required'     => 'Escribe el correo.',
+            'email.email'        => 'Revisa el correo: debe tener la forma nombre@correo.com.',
+            'email.unique'       => 'Ya hay una cuenta con este correo.',
+            'password.required'  => 'Escribe una contraseña.',
+            'password.min'       => 'La contraseña debe tener al menos 8 caracteres.',
+            'password.confirmed' => 'Las dos contraseñas no coinciden.',
+            'role.*'             => 'Elige qué puede hacer esta persona.',
+        ];
     }
 }

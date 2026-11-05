@@ -15,7 +15,18 @@ class HorarioController extends Controller
 
     public function update(Request $request)
     {
-        $intervalo = (int) $request->input('intervalo', config('salon.intervalo_minutos', 30));
+        $validator = validator($request->all(), [
+            'intervalo'                => 'required|integer|in:15,30,45,60',
+            'horarios.*.hora_apertura' => 'nullable|date_format:H:i',
+            'horarios.*.hora_cierre'   => 'nullable|date_format:H:i',
+        ], [
+            'intervalo.*'   => 'Elige cada cuánto se ofrecen las horas.',
+            '*.date_format' => 'Escribe la hora como 09:00.',
+        ]);
+        $validator->after(fn ($v) => EmpleadoController::revisarHoras($v, $request->input('horarios', [])));
+        $validator->validate();
+
+        $intervalo = (int) $request->input('intervalo');
 
         for ($dia = 1; $dia <= 7; $dia++) {
             $datos  = $request->input("horarios.$dia", []);
@@ -33,7 +44,7 @@ class HorarioController extends Controller
             $this->setEnv('SALON_INTERVALO', $intervalo);
         }
 
-        return redirect()->route('horarios.index')->with('success', 'Horarios actualizados correctamente.');
+        return redirect()->route('horarios.index')->with('success', 'Guardaste el horario del salón.');
     }
 
     private function setEnv(string $key, mixed $value): void

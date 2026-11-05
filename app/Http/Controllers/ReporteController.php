@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Cita;
-use App\Models\Servicio;
 use App\Services\ReportePdfService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -12,106 +11,141 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ReporteController extends Controller
 {
+    private const ESTADOS = [
+        'pendiente'  => 'Pendiente',
+        'confirmada' => 'Confirmada',
+        'completada' => 'Completada',
+        'cancelada'  => 'Cancelada',
+    ];
+
     public function index(Request $request)
     {
-        $desde = $request->get('desde', now()->startOfMonth()->toDateString());
-        $hasta = $request->get('hasta', now()->toDateString());
+        [$desde, $hasta] = $this->periodo($request);
 
-        $citas = Cita::with('servicios')
-            ->whereBetween('fecha', [$desde, $hasta])
-            ->whereNot('estado', 'cancelada')
-            ->get();
+        $citas = Cita::whereBetween('fecha', [$desde, $hasta])->get(['id', 'user_id', 'estado', 'total']);
+        $validas = $citas->where('estado', '!=', 'cancelada');
 
-        $ingresosPorServicio = DB::table('cita_servicio')
-            ->join('servicios', 'servicios.id', '=', 'cita_servicio.servicio_id')
+        $resumen = [
+            'citas'       => $validas->count(),
+            'realizado'   => (float) $validas->where('estado', 'completada')->sum('total'),
+            'agendado'    => (float) $validas->whereIn('estado', ['pendiente', 'confirmada'])->sum('total'),
+            'canceladas'  => $citas->where('estado', 'cancelada')->count(),
+            'clientes'    => $validas->pluck('user_id')->filter()->unique()->count(),
+        ];
+
+        $porEstado = collect(self::ESTADOS)->map(fn ($nombre, $clave) => [
+            'nombre' => $nombre,
+            'total'  => $citas->where('estado', $clave)->count(),
+        ]);
+
+        $base = fn () => DB::table('cita_servicio')
             ->join('citas', 'citas.id', '=', 'cita_servicio.cita_id')
+            ->join('servicios', 'servicios.id', '=', 'cita_servicio.servicio_id')
             ->whereBetween('citas.fecha', [$desde, $hasta])
-            ->whereNot('citas.estado', 'cancelada')
-            ->select('servicios.nombre', DB::raw('COUNT(*) as cantidad'), DB::raw('SUM(servicios.precio) as ingresos'))
+            ->where('citas.estado', '!=', 'cancelada');
+
+        $porServicio = $base()
+            ->select('servicios.id', 'servicios.nombre', DB::raw('COUNT(*) as cantidad'), DB::raw('SUM(servicios.precio) as ingresos'))
             ->groupBy('servicios.id', 'servicios.nombre')
             ->orderByDesc('ingresos')
             ->get();
 
-        $citasPorEstado = Cita::whereBetween('fecha', [$desde, $hasta])
-            ->select('estado', DB::raw('COUNT(*) as total'))
-            ->groupBy('estado')
-            ->pluck('total', 'estado');
+        $porEmpleado = $base()
+            ->leftJoin('empleados', 'empleados.id', '=', 'cita_servicio.empleado_id')
+            ->select(DB::raw("COALESCE(empleados.nombre, 'Sin preferencia') as nombre"), DB::raw('COUNT(*) as cantidad'))
+            ->groupBy('empleados.id', 'empleados.nombre')
+            ->orderByDesc('cantidad')
+            ->get();
 
-        $citasHoy = Cita::delDia()->activas()->count();
-        $ingresosPeriodo = $citas->sum('total');
-        $clientesUnicos = $citas->pluck('user_id')->unique()->filter()->count();
+        $atajos = [
+            'Este mes'         => [now()->startOfMonth(), now()->endOfMonth()],
+            'Mes pasado'       => [now()->subMonthNoOverflow()->startOfMonth(), now()->subMonthNoOverflow()->endOfMonth()],
+            'Últimos 30 días'  => [now()->subDays(29), now()],
+            'Este año'         => [now()->startOfYear(), now()->endOfYear()],
+        ];
 
-        return view('reportes.index', compact(
-            'desde',
-            'hasta',
-            'citas',
-            'ingresosPorServicio',
-            'citasPorEstado',
-            'citasHoy',
-            'ingresosPeriodo',
-            'clientesUnicos'
-        ));
+        return view('reportes.index', compact('desde', 'hasta', 'resumen', 'porEstado', 'porServicio', 'porEmpleado', 'atajos'));
     }
 
     public function exportarCsv(Request $request): StreamedResponse
     {
-        $desde = $request->get('desde', now()->startOfMonth()->toDateString());
-        $hasta = $request->get('hasta', now()->toDateString());
-
-        $citas = Cita::with(['usuario', 'servicios'])
-            ->whereBetween('fecha', [$desde, $hasta])
-            ->orderBy('fecha')
-            ->get();
-
-        $filename = 'reporte_citas_'.Carbon::parse($desde)->format('Ymd').'_'.Carbon::parse($hasta)->format('Ymd').'.csv';
+        [$desde, $hasta] = $this->periodo($request);
+        $citas = $this->citasDetalle($desde, $hasta);
+        $archivo = 'arrecife_citas_' . str_replace('-', '', $desde) . '_' . str_replace('-', '', $hasta) . '.csv';
 
         return response()->streamDownload(function () use ($citas) {
-            $handle = fopen('php://output', 'w');
-            fputcsv($handle, ['ID', 'Fecha', 'Hora', 'Cliente', 'Servicios', 'Total', 'Estado']);
-
-            foreach ($citas as $cita) {
-                fputcsv($handle, [
-                    $cita->id,
-                    $cita->fecha->format('Y-m-d'),
-                    substr((string) $cita->hora, 0, 5),
-                    $cita->usuario?->name ?? 'N/A',
-                    $cita->servicios->pluck('nombre')->implode('; '),
-                    $cita->total,
-                    $cita->estado,
-                ]);
+            $h = fopen('php://output', 'w');
+            fwrite($h, "\xEF\xBB\xBF"); // BOM: Excel abre bien las tildes
+            fputcsv($h, ['Cita', 'Fecha', 'Hora', 'Cliente', 'Correo', 'Servicios', 'Total', 'Estado'], ';');
+            foreach ($citas as $c) {
+                fputcsv($h, [
+                    $c->id,
+                    $c->fecha->format('d/m/Y'),
+                    substr((string) $c->hora, 0, 5),
+                    $c->usuario?->name ?? 'Sin cliente',
+                    $c->usuario?->email ?? '',
+                    $c->servicios->map->nombre_publico->implode(', '),
+                    (int) round($c->total),
+                    self::ESTADOS[$c->estado] ?? $c->estado,
+                ], ';');
             }
-
-            fclose($handle);
-        }, $filename, ['Content-Type' => 'text/csv']);
+            fclose($h);
+        }, $archivo, ['Content-Type' => 'text/csv; charset=UTF-8']);
     }
 
     public function exportarPdf(Request $request)
     {
-        $desde = $request->get('desde', now()->startOfMonth()->toDateString());
-        $hasta = $request->get('hasta', now()->toDateString());
-
-        $citas = Cita::with('servicios')
-            ->whereBetween('fecha', [$desde, $hasta])
-            ->whereNot('estado', 'cancelada')
-            ->get();
+        [$desde, $hasta] = $this->periodo($request);
+        $citas   = $this->citasDetalle($desde, $hasta);
+        $validas = $citas->where('estado', '!=', 'cancelada');
+        $moneda  = fn ($v) => '$' . number_format($v, 0, ',', '.');
+        $fecha   = fn ($f) => Carbon::parse($f)->translatedFormat('j \d\e F \d\e Y');
 
         $lineas = [
-            'Periodo: '.$desde.' al '.$hasta,
-            'Total citas: '.$citas->count(),
-            'Ingresos: $'.number_format($citas->sum('total'), 0, ',', '.'),
-            ' ',
+            'Período: ' . $fecha($desde) . ' al ' . $fecha($hasta),
+            'Citas (sin canceladas): ' . $validas->count() . '   Canceladas: ' . $citas->where('estado', 'cancelada')->count(),
+            'Realizado (completadas): ' . $moneda($validas->where('estado', 'completada')->sum('total')),
+            'Agendado (pendientes y confirmadas): ' . $moneda($validas->whereIn('estado', ['pendiente', 'confirmada'])->sum('total')),
+            '',
         ];
-
-        foreach ($citas->take(25) as $cita) {
-            $lineas[] = $cita->fecha->format('d/m/Y').' '.substr((string) $cita->hora, 0, 5)
-                .' - $'.number_format($cita->total, 0).' ('.$cita->estado.')';
+        foreach ($citas as $c) {
+            $lineas[] = $c->fecha->format('d/m/Y') . '  ' . substr((string) $c->hora, 0, 5)
+                . '  ' . str_pad(self::ESTADOS[$c->estado] ?? $c->estado, 11)
+                . '  ' . $moneda($c->total)
+                . '  ' . mb_strimwidth(($c->usuario?->name ?? 'Sin cliente') . ' - ' . $c->servicios->map->nombre_publico->implode(', '), 0, 70, '...');
         }
+        if ($citas->isEmpty()) $lineas[] = 'No hay citas en este período.';
 
-        $pdf = (new ReportePdfService)->generar('Reporte de Citas - AppSalon', $lineas);
+        $pdf = (new ReportePdfService)->generar('Arrecife Beauty Studio - Reporte de citas', $lineas);
 
         return response($pdf, 200, [
-            'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'attachment; filename="reporte_citas.pdf"',
+            'Content-Type'        => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="arrecife_citas_' . str_replace('-', '', $desde) . '_' . str_replace('-', '', $hasta) . '.pdf"',
         ]);
+    }
+
+    /** Lee "desde" y "hasta" (por defecto el mes actual). Si vienen al revés, los ordena. */
+    private function periodo(Request $request): array
+    {
+        $leer = function ($valor, Carbon $defecto) {
+            try {
+                return $valor ? Carbon::createFromFormat('Y-m-d', $valor)->startOfDay() : $defecto;
+            } catch (\Throwable) {
+                return $defecto;
+            }
+        };
+        $desde = $leer($request->get('desde'), now()->startOfMonth());
+        $hasta = $leer($request->get('hasta'), now()->endOfMonth());
+        if ($desde->gt($hasta)) [$desde, $hasta] = [$hasta, $desde];
+
+        return [$desde->toDateString(), $hasta->toDateString()];
+    }
+
+    private function citasDetalle(string $desde, string $hasta)
+    {
+        return Cita::with(['usuario', 'servicios'])
+            ->whereBetween('fecha', [$desde, $hasta])
+            ->orderBy('fecha')->orderBy('hora')
+            ->get();
     }
 }

@@ -1,29 +1,22 @@
-<x-app-layout>
+<x-app-layout titulo="Mi cuenta">
     <x-slot name="header">
-        <h2 class="font-black text-2xl text-warm-900 leading-tight">
-            {{ __('Mi Perfil') }}
-        </h2>
+        <div class="grid gap-1">
+            <h1 class="text-[clamp(2rem,1.5rem+2vw,3rem)] leading-none">Mi cuenta</h1>
+            <p class="text-texto-suave">{{ $user->rol_nombre }} · cuenta creada el {{ $user->created_at?->translatedFormat('j \d\e F \d\e Y') }}</p>
+        </div>
     </x-slot>
 
-    <div class="py-12 bg-cream min-h-screen">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
-            <div class="p-4 sm:p-8 bg-white shadow-sm rounded-[2rem] border border-warm-200">
-                <div class="max-w-xl">
-                    @include('profile.partials.update-profile-information-form')
-                </div>
-            </div>
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 py-8 md:py-10 grid gap-6">
+        <section class="card p-6 md:p-8">
+            @include('profile.partials.update-profile-information-form')
+        </section>
 
-            <div class="p-4 sm:p-8 bg-white shadow-sm rounded-[2rem] border border-warm-200">
-                <div class="max-w-xl">
-                    @include('profile.partials.update-password-form')
-                </div>
-            </div>
+        <section class="card p-6 md:p-8">
+            @include('profile.partials.update-password-form')
+        </section>
 
-            <div class="p-4 sm:p-8 bg-white shadow-sm rounded-[2rem] border border-warm-200">
-                <div class="max-w-xl">
-                    @include('profile.partials.delete-user-form')
-                </div>
-            </div>
-        </div>
+        <section class="p-6 md:p-8 rounded-2xl border border-red-200 bg-white">
+            @include('profile.partials.delete-user-form')
+        </section>
     </div>
 </x-app-layout>

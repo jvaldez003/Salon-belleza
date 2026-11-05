@@ -48,6 +48,13 @@ class ProfileController extends Controller
 
         $user = $request->user();
 
+        if ($user->isAdmin() && \App\Models\User::where('role', 'admin')->count() <= 1) {
+            return Redirect::route('profile.edit')->withErrors(
+                ['password' => 'Eres el único administrador. Crea otro administrador antes de eliminar tu cuenta.'],
+                'userDeletion'
+            );
+        }
+
         Auth::logout();
 
         $user->delete();
