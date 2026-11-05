@@ -137,9 +137,11 @@ class CitaController extends Controller
 
     public function create()
     {
-        $servicios = Servicio::activos()->with('empleados')->orderBy('nombre')->get();
+        $servicios   = Servicio::activos()->with(['empleados', 'categoria'])->orderBy('nombre')->get();
+        $categorias  = \App\Models\Categoria::activas()->get();
 
-        return view('citas.create', compact('servicios'));
+        // Las clientas reservan con el diseño público; el equipo, dentro del panel
+        return view($this->esEquipo() ? 'citas.create' : 'citas.reservar', compact('servicios', 'categorias'));
     }
 
     public function store(CitaRequest $request)
@@ -181,10 +183,11 @@ class CitaController extends Controller
     public function edit(Cita $cita)
     {
         $this->autorizarAcceso($cita);
-        $servicios = Servicio::activos()->with('empleados')->orderBy('nombre')->get();
+        $servicios  = Servicio::activos()->with(['empleados', 'categoria'])->orderBy('nombre')->get();
+        $categorias = \App\Models\Categoria::activas()->get();
         $cita->load('servicios');
 
-        return view('citas.edit', compact('cita', 'servicios'));
+        return view($this->esEquipo() ? 'citas.edit' : 'citas.reservar', compact('cita', 'servicios', 'categorias'));
     }
 
     public function update(CitaRequest $request, Cita $cita)
@@ -284,6 +287,12 @@ class CitaController extends Controller
             $pivot[(int) $sid] = ['empleado_id' => $eid];
         }
         return $pivot;
+    }
+
+    /** true si quien navega es del equipo del salón (admin o editor). */
+    protected function esEquipo(): bool
+    {
+        return auth()->user()->isAdmin() || auth()->user()->isEditor();
     }
 
     protected function autorizarAcceso(Cita $cita): void

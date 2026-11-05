@@ -23,6 +23,7 @@ class ConfiguracionSitioController extends Controller
     {
         $request->validate([
             'nombre_negocio'        => 'required|string|max:100',
+            'eslogan'               => 'nullable|string|max:150',
             'logo'                  => 'nullable|image|max:2048',
             'quienes_somos_titulo'  => 'nullable|string|max:100',
             'quienes_somos_texto'   => 'nullable|string|max:2000',
@@ -34,12 +35,20 @@ class ConfiguracionSitioController extends Controller
             'telefono'              => 'nullable|string|max:30',
             'email_contacto'        => 'nullable|email|max:100',
             'direccion'             => 'nullable|string|max:200',
+            'whatsapp'              => 'nullable|string|max:30',
+            'facebook'              => 'nullable|url|max:200',
+            'instagram'             => 'nullable|url|max:200',
+            'tiktok'                => 'nullable|url|max:200',
+            'youtube'               => 'nullable|url|max:200',
         ]);
 
         $config = ConfiguracionSitio::instancia();
         $data   = $request->only([
-            'nombre_negocio', 'quienes_somos_titulo', 'quienes_somos_texto',
-            'mision_texto', 'vision_texto', 'telefono', 'email_contacto', 'direccion',
+            'nombre_negocio', 'eslogan',
+            'quienes_somos_titulo', 'quienes_somos_texto',
+            'mision_texto', 'vision_texto',
+            'telefono', 'email_contacto', 'direccion',
+            'whatsapp', 'facebook', 'instagram', 'tiktok', 'youtube',
         ]);
 
         foreach (['logo', 'quienes_somos_imagen', 'mision_imagen', 'vision_imagen'] as $campo) {

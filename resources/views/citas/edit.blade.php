@@ -1,10 +1,11 @@
+{{-- Edición de cita desde el panel (equipo del salón). Las clientas usan citas/reservar. --}}
 <x-app-layout>
     <x-slot name="header">
-        <h1 class="font-black text-3xl text-slate-900 italic">{{ __('Editar Cita') }}</h1>
+        <h1 class="font-display text-3xl">Editar cita</h1>
     </x-slot>
 
-    <div class="py-12 bg-slate-50 min-h-screen">
-        <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
+    <div class="py-10 bg-superficie min-h-screen">
+        <div class="max-w-arrecife mx-auto px-4 sm:px-6">
             @include('citas._form', ['cita' => $cita, 'action' => route('citas.update', $cita), 'method' => 'PUT'])
         </div>
     </div>

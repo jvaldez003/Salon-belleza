@@ -15,6 +15,11 @@ class Categoria extends Model
         return $this->hasMany(Servicio::class);
     }
 
+    public function imagenes()
+    {
+        return $this->hasMany(CategoriaImagen::class)->orderBy('orden');
+    }
+
     public function scopeActivas($query)
     {
         return $query->where('activo', true)->orderBy('orden');

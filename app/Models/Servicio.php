@@ -58,4 +58,31 @@ class Servicio extends Model
     {
         return $query->where('activo', true);
     }
+
+    /**
+     * Nombre para mostrar al público: sin MAYÚSCULAS sostenidas y sin la palabra "desde".
+     * "Cepillado y Planchado desde" → "Cepillado y Planchado"
+     */
+    public function getNombrePublicoAttribute(): string
+    {
+        $nombre = \Illuminate\Support\Str::legible($this->nombre);
+        $nombre = trim(preg_replace('/\s*\bdesde\b\s*/iu', ' ', $nombre));
+        return \Illuminate\Support\Str::ucfirst($nombre);
+    }
+
+    /** true si el precio es "desde" (el nombre del servicio lo indica). */
+    public function getPrecioDesdeAttribute(): bool
+    {
+        return (bool) preg_match('/\bdesde\b/iu', (string) $this->nombre);
+    }
+
+    /** Duración legible: 60 → "1 h", 90 → "1 h 30 min", 45 → "45 min". */
+    public function getDuracionTextoAttribute(): string
+    {
+        $min = (int) $this->duracion;
+        if ($min < 60) return "{$min} min";
+        $h = intdiv($min, 60);
+        $m = $min % 60;
+        return $m ? "{$h} h {$m} min" : "{$h} h";
+    }
 }

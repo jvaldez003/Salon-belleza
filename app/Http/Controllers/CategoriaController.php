@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Categoria;
+use App\Models\CategoriaImagen;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -39,8 +40,10 @@ class CategoriaController extends Controller
 
     public function destroy(Categoria $categoria)
     {
-        // Desvincula servicios antes de borrar
         $categoria->servicios()->update(['categoria_id' => null]);
+        foreach ($categoria->imagenes as $img) {
+            Storage::disk('public')->delete($img->url);
+        }
         if ($categoria->imagen) {
             Storage::disk('public')->delete($categoria->imagen);
         }
@@ -51,24 +54,21 @@ class CategoriaController extends Controller
 
     public function storeImagen(Request $request, Categoria $categoria)
     {
-        $request->validate(['imagen' => 'required|image|max:3072']);
-
-        if ($categoria->imagen) {
-            Storage::disk('public')->delete($categoria->imagen);
-        }
+        $request->validate(['imagen' => 'required|image|max:4096']);
 
         $path = $request->file('imagen')->store('categorias', 'public');
-        $categoria->update(['imagen' => $path]);
+        $categoria->imagenes()->create([
+            'url'   => $path,
+            'orden' => (int) $categoria->imagenes()->max('orden') + 1,
+        ]);
 
-        return back()->with('success', 'Imagen de categoría actualizada.');
+        return back()->with('success', 'Imagen añadida.');
     }
 
-    public function destroyImagen(Categoria $categoria)
+    public function destroyImagen(CategoriaImagen $imagen)
     {
-        if ($categoria->imagen) {
-            Storage::disk('public')->delete($categoria->imagen);
-            $categoria->update(['imagen' => null]);
-        }
+        Storage::disk('public')->delete($imagen->url);
+        $imagen->delete();
 
         return back()->with('success', 'Imagen eliminada.');
     }

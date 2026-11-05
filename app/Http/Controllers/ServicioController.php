@@ -12,8 +12,9 @@ class ServicioController extends Controller
 {
     public function index()
     {
-        $servicios = Servicio::with(['imagenes', 'categoria'])->get();
-        return view('servicios.index', compact('servicios'));
+        $servicios  = Servicio::with(['imagenes', 'categoria'])->orderBy('nombre')->get();
+        $categorias = Categoria::orderBy('orden')->orderBy('nombre')->get();
+        return view('servicios.index', compact('servicios', 'categorias'));
     }
 
     public function create()

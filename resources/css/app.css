@@ -2,81 +2,141 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ | Sistema de diseño Arrecife — ver tailwind.config.js para los tokens.
+ | Las clases de componentes conservan sus nombres anteriores (btn-primary, card, form-input…)
+ | para que las vistas existentes sigan funcionando mientras se migran.
+ */
+
 @layer base {
     :root {
-        --color-primary:       #0A2F6B;
-        --color-primary-light: #0E4A9E;
-        --color-secondary:     #008FE8;
-        --color-accent:        #7FD8FF;
-        --color-bg:            #F8FCFF;
-        --color-bg-dark:       #EBF5FC;
-        --color-border:        #D9EAF2;
-        --color-text:          #1F2937;
-        --color-text-light:    #6B7280;
+        --superficie:  #F8FCFF;
+        --bruma:       #EBF5FC;
+        --bruma-honda: #D9EAF2;
+        --laguna:      #008FE8;
+        --agua:        #7FD8FF;
+        --oceano:      #0E4A9E;
+        --abismo:      #0A2F6B;
+        --texto:       #2C4468;
+        --texto-suave: #546C8C;
+        --linea:       #C5DAE8;
+
+        /* Alias heredados (usados por vistas antiguas) */
+        --color-primary:       var(--abismo);
+        --color-primary-light: var(--oceano);
+        --color-secondary:     var(--laguna);
+        --color-accent:        var(--agua);
+        --color-bg:            var(--superficie);
+        --color-bg-dark:       var(--bruma);
+        --color-border:        var(--bruma-honda);
+        --color-text:          var(--texto);
+        --color-text-light:    var(--texto-suave);
         --color-silver:        #BFC6CC;
         --color-surface:       #FFFFFF;
-
         --gradient-main: linear-gradient(135deg, #0A2F6B 0%, #0E4A9E 45%, #008FE8 100%);
     }
 
     body {
-        @apply bg-cream text-warm-800;
-        font-family: 'Poppins', sans-serif !important;
+        @apply bg-superficie text-texto font-sans antialiased;
     }
 
     h1, h2, h3, h4, h5 {
-        font-family: 'Playfair Display', serif;
-        @apply text-warm-900;
+        @apply font-display text-tinta;
+        font-weight: 500;
+        text-wrap: balance;
+    }
+
+    :focus-visible {
+        outline: 3px solid var(--laguna);
+        outline-offset: 3px;
     }
 
     ::selection {
-        background-color: #7FD8FF;
-        color: #0A2F6B;
+        background-color: var(--agua);
+        color: var(--abismo);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after {
+            animation-duration: .01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: .01ms !important;
+            scroll-behavior: auto !important;
+        }
     }
 }
 
 @layer components {
+    /* ── Botones (forma de píldora) ─────────────────────────── */
+    .btn {
+        @apply inline-flex items-center justify-center gap-2 min-h-[46px] px-6 rounded-full font-sans font-semibold text-[0.9375rem] border-[1.5px] border-transparent transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
+    }
+    .btn-primary   { @apply btn bg-oceano text-white hover:bg-abismo; }
+    .btn-secondary { @apply btn bg-transparent text-oceano border-oceano hover:bg-bruma; }
+    .btn-claro     { @apply btn bg-agua text-abismo hover:bg-white; }   /* sobre fondo abismo */
+    .btn-peligro   { @apply btn bg-red-700 text-white hover:bg-red-800; }
+
+    /* ── Tarjetas: solo para lo que de verdad es un objeto aparte ── */
     .card {
-        @apply bg-white rounded-3xl shadow-sm border border-warm-200 transition-all duration-300;
+        @apply bg-white rounded-2xl border border-linea;
     }
-
     .card-hover {
-        @apply card hover:shadow-xl hover:-translate-y-1;
+        @apply card transition-colors duration-200 hover:border-oceano/40;
     }
 
-    .btn-primary {
-        @apply inline-flex items-center justify-center gap-2 px-6 py-3 bg-rose-primary hover:bg-rose-dark text-white font-semibold rounded-2xl shadow-sm transition-all duration-200 active:scale-95 focus:outline-none focus:ring-2 focus:ring-rose-primary focus:ring-offset-2;
-    }
-
-    .btn-secondary {
-        @apply inline-flex items-center justify-center gap-2 px-6 py-3 bg-white hover:bg-cream border border-warm-200 text-warm-700 font-semibold rounded-2xl shadow-sm transition-all duration-200 active:scale-95 focus:outline-none focus:ring-2 focus:ring-warm-300 focus:ring-offset-2;
-    }
-
+    /* ── Formularios ─────────────────────────────────────────── */
     .form-input {
-        @apply w-full bg-cream border-0 rounded-2xl py-3 px-4 text-warm-900 font-medium placeholder-warm-400 focus:ring-2 focus:ring-rose-primary transition;
+        @apply w-full bg-white border border-linea rounded-xl py-3 px-4 text-tinta font-medium placeholder-texto-suave/70 focus:border-laguna focus:ring-2 focus:ring-laguna/30 transition;
     }
-
-    .badge-blue {
-        @apply inline-flex items-center px-3 py-1 rounded-full bg-rose-light/20 text-rose-deeper text-xs font-semibold;
-    }
-
-    .badge-accent {
-        @apply inline-flex items-center px-3 py-1 rounded-full bg-rose-light/30 text-rose-dark text-xs font-semibold;
-    }
-
-    .badge-warm {
-        @apply inline-flex items-center px-3 py-1 rounded-full bg-warm-100 text-warm-600 text-xs font-semibold;
-    }
-
     .label {
-        @apply block text-xs font-semibold text-warm-500 uppercase tracking-widest mb-1;
+        @apply block text-sm font-semibold text-texto mb-1.5;
     }
 
+    /* ── Insignias ───────────────────────────────────────────── */
+    .badge        { @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold; }
+    .badge-blue   { @apply badge bg-bruma text-oceano; }
+    .badge-accent { @apply badge bg-agua/30 text-abismo; }
+    .badge-warm   { @apply badge bg-bruma-honda text-texto; }
+
+    /* ── Avisos ──────────────────────────────────────────────── */
     .alert-success {
-        @apply bg-rose-light/15 border border-rose-light/40 text-rose-deeper px-6 py-4 rounded-2xl flex items-center gap-3;
+        @apply bg-bruma border border-laguna/30 text-abismo px-6 py-4 rounded-2xl flex items-center gap-3;
+    }
+    .alert-error {
+        @apply bg-red-50 border border-red-200 text-red-800 px-6 py-4 rounded-2xl flex items-center gap-3;
     }
 
-    .alert-error {
-        @apply bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded-2xl flex items-center gap-3;
+    /* ── Fotos subidas por el salón ──────────────────────────── */
+    /* Marco de proporción fija: la foto se recorta para llenarlo, nunca se deforma. */
+    .foto-marco {
+        @apply relative overflow-hidden rounded-foto bg-bruma-honda max-w-full;
+        box-shadow: inset 0 0 0 1px rgb(10 47 107 / .08);
     }
+    .foto-marco > img {
+        @apply absolute inset-0 w-full h-full object-cover;
+    }
+    /* Velo azul para que el texto encima de una foto siempre se lea */
+    .foto-velo {
+        @apply absolute inset-x-0 bottom-0 pt-16 pb-5 px-5 text-white;
+        background: linear-gradient(180deg, transparent, rgb(10 47 107 / .85));
+    }
+    /* Respaldo de marca cuando no hay foto */
+    .foto-respaldo {
+        @apply absolute inset-0 grid place-items-center;
+        background:
+            radial-gradient(120% 80% at 20% 0%, rgb(127 216 255 / .55), transparent 60%),
+            radial-gradient(90% 70% at 100% 100%, rgb(14 74 158 / .35), transparent 65%),
+            var(--bruma-honda);
+    }
+
+    /* ── Carta de precios ────────────────────────────────────── */
+    .precio {
+        @apply font-display text-oceano text-xl;
+        font-variant-numeric: tabular-nums lining-nums;
+    }
+}
+
+@layer utilities {
+    .tabular { font-variant-numeric: tabular-nums; }
+    .opsz-max { font-variation-settings: "opsz" 96; }
 }

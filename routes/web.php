@@ -20,15 +20,25 @@ use Illuminate\Support\Facades\Route;
     Este archivo define todas las rutas de la aplicación y sus permisos.
 */
 
-// PÁGINA DE INICIO: Carga banners, servicios, categorías, protocolos e imágenes de sección.
+// PÁGINA DE INICIO
 Route::get('/', function () {
-    $categorias     = \App\Models\Categoria::activas()->get();
-    $servicios      = \App\Models\Servicio::activos()->with(['imagenes', 'categoria'])->get();
-    $banners        = \App\Models\Banner::where('activo', true)->latest()->get();
+    $categorias  = \App\Models\Categoria::activas()->with('imagenes')->get();
+    $servicios   = \App\Models\Servicio::activos()->with(['imagenes', 'categoria'])->get();
+    $banners     = \App\Models\Banner::where('activo', true)->latest()->get();
+    return view('welcome', compact('servicios', 'banners', 'categorias'));
+})->name('home');
+
+// QUIÉNES SOMOS
+Route::get('/nosotros', function () {
     $seccionImagenes = \App\Models\SeccionImagen::orderBy('orden')->get()->groupBy('seccion');
-    $protocolos     = \App\Models\Protocolo::activos()->with('medios')->get();
-    return view('welcome', compact('servicios', 'banners', 'seccionImagenes', 'categorias', 'protocolos'));
-});
+    return view('nosotros', compact('seccionImagenes'));
+})->name('nosotros');
+
+// PROTOCOLOS (pública)
+Route::get('/procedimientos', function () {
+    $protocolos = \App\Models\Protocolo::activos()->with('medios')->get();
+    return view('protocolos-publico', compact('protocolos'));
+})->name('protocolos.publico');
 
 // DASHBOARD: Resumen informativo después de iniciar sesión.
 Route::get('/dashboard', function () {
@@ -120,7 +130,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::put('categorias/{categoria}', [CategoriaController::class, 'update'])->name('categorias.update');
     Route::delete('categorias/{categoria}', [CategoriaController::class, 'destroy'])->name('categorias.destroy');
     Route::post('categorias/{categoria}/imagen', [CategoriaController::class, 'storeImagen'])->name('categorias.imagen.store');
-    Route::delete('categorias/{categoria}/imagen', [CategoriaController::class, 'destroyImagen'])->name('categorias.imagen.destroy');
+    Route::delete('categorias/imagen/{imagen}', [CategoriaController::class, 'destroyImagen'])->name('categorias.imagen.destroy');
 
     // Protocolos de tratamiento.
     Route::resource('protocolos', ProtocoloController::class);
