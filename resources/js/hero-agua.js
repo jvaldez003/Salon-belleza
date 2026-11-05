@@ -30,6 +30,7 @@ uniform float uZ1;
 uniform vec2 uRaton;
 uniform vec2 uOrigen;
 uniform vec2 uFoco;
+uniform float uHundir;
 
 // Recorta la foto para cubrir el marco (como object-fit: cover) con punto de foco y zoom.
 vec2 cubrir(vec2 uv, vec2 img, float zoom) {
@@ -38,7 +39,7 @@ vec2 cubrir(vec2 uv, vec2 img, float zoom) {
     vec2 s = ra > ia ? vec2(1., ia / ra) : vec2(ra / ia, 1.);
     s /= zoom;
     // Igual que object-position: el punto de foco de la foto queda en el mismo punto relativo del marco
-    vec2 c = clamp((1. - s) * uFoco + s * .5 + uRaton * .02, s * .5, 1. - s * .5);
+    vec2 c = clamp((1. - s) * uFoco + s * .5 + uRaton * .035, s * .5, 1. - s * .5);
     return c + (uv - .5) * s;
 }
 
@@ -76,8 +77,20 @@ void main() {
     vec2 dir = dist > .0001 ? (d / dist) / asp : vec2(0.);
     vec2 empuje = dir * sin((dist - r) * 48.) * banda * vida * .028;
 
-    vec3 sale = texture2D(uT0, cubrir(uv + empuje, uS0, uZ0)).rgb;
-    vec3 entra = texture2D(uT1, cubrir(uv - empuje * .6, uS1, uZ1 + (1. - uP) * .08)).rgb;
+    // Refracción: en el frente de la onda los colores se separan levemente, como luz a través del agua
+    vec2 prisma = dir * banda * vida * .011;
+    vec2 ua = uv + empuje;
+    vec2 ub = uv - empuje * .6;
+    float zb = uZ1 + (1. - uP) * .08;
+    vec3 sale = vec3(
+        texture2D(uT0, cubrir(ua + prisma, uS0, uZ0)).r,
+        texture2D(uT0, cubrir(ua, uS0, uZ0)).g,
+        texture2D(uT0, cubrir(ua - prisma, uS0, uZ0)).b);
+    vec3 entra = vec3(
+        texture2D(uT1, cubrir(ub + prisma, uS1, zb)).r,
+        texture2D(uT1, cubrir(ub, uS1, zb)).g,
+        texture2D(uT1, cubrir(ub - prisma, uS1, zb)).b);
+    
     vec3 col = mix(sale, entra, smoothstep(-.015, .05, frente));
 
     // Anillo de luz en el frente de la onda
@@ -86,7 +99,10 @@ void main() {
     // Luz de agua, más intensa arriba (cerca de la superficie)
     float desvanece = clamp((1. - vUv.y) * 1.6, 0., 1.);
     float c = causticas(vUv, t * .35 + 23.);
-    col = 1. - (1. - col) * (1. - vec3(.745, .925, 1.) * c * .45 * desvanece);
+    col = 1. - (1. - col) * (1. - vec3(.745, .925, 1.) * c * .45 * desvanece * (1. - uHundir * .7));
+
+    // Al bajar por la página la foto se hunde: menos luz y más azul
+    col = mix(col, col * vec3(.62, .74, .95), uHundir * .55);
 
     gl_FragColor = vec4(col, 1.);
 }`;
@@ -131,7 +147,7 @@ export class HeroAgua {
         gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
 
         this.u = {};
-        ['uT0', 'uT1', 'uRes', 'uS0', 'uS1', 'uP', 'uTiempo', 'uZ0', 'uZ1', 'uRaton', 'uOrigen', 'uFoco']
+        ['uT0', 'uT1', 'uRes', 'uS0', 'uS1', 'uP', 'uTiempo', 'uZ0', 'uZ1', 'uRaton', 'uOrigen', 'uFoco', 'uHundir']
             .forEach((n) => { this.u[n] = gl.getUniformLocation(this.prog, n); });
         gl.uniform1i(this.u.uT0, 0);
         gl.uniform1i(this.u.uT1, 1);
@@ -145,6 +161,7 @@ export class HeroAgua {
         this.tTransicion = null;
         this.origen = [.5, .62];
         this.raton = { x: 0, y: 0, ox: 0, oy: 0 };
+        this.hundir = 0;
         this.visible = true;
         this.primerCuadro = false;
 
@@ -241,6 +258,11 @@ export class HeroAgua {
         this.raton.y = y;
     }
 
+    /** 0 arriba de la página, 1 cuando el banner ya pasó. */
+    hundirse(valor) {
+        this.hundir = valor;
+    }
+
     zoom(i, ahora) {
         return ZOOM_BASE + ZOOM_EXTRA * salida(Math.min(1, (ahora - this.inicio[i]) / ZOOM_TIEMPO));
     }
@@ -279,6 +301,7 @@ export class HeroAgua {
         gl.uniform1f(this.u.uTiempo, ahora / 1000);
         gl.uniform2f(this.u.uRaton, this.raton.ox, this.raton.oy);
         gl.uniform2f(this.u.uOrigen, this.origen[0], this.origen[1]);
+        gl.uniform1f(this.u.uHundir, this.hundir);
 
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, a.tex);

@@ -195,12 +195,108 @@
         filter .9s ease calc(var(--d, 0ms) + 800ms);
 }
 
-/* Marco en arco: respira un poco al pasar el mouse */
-.hero-arco {
-    transition: border-radius 1.2s cubic-bezier(.16, 1, .3, 1), transform 1.2s cubic-bezier(.16, 1, .3, 1);
+/* Escena 3D del banner. Variables que pone resources/js/hero.js en .hero:
+   --hmx/--hmy (mouse, -1 a 1) y --hundir (0 a 1 al bajar). */
+.hero-escena {
+    perspective: 1300px;
+    perspective-origin: 50% 40%;
 }
-@media (hover: hover) {
-    .hero-arco:hover { transform: scale(1.012); }
+/* El arco no se inclina (decisión del cliente: menos cargado). Al bajar solo se aleja un poco. */
+.hero-arco {
+    transform: translateY(calc(var(--hundir, 0) * 40px)) scale(calc(1 - var(--hundir, 0) * .08));
+    transform-origin: 50% 70%;
+    box-shadow: 0 26px 60px -26px rgb(10 47 107 / .45);
+}
+/* Reflejo fijo sobre el vidrio del arco */
+.hero-reflejo {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+        radial-gradient(60% 45% at 30% 18%, rgb(255 255 255 / .22), transparent 70%),
+        linear-gradient(115deg, transparent 38%, rgb(234 246 255 / .12) 46%, transparent 54%);
+    mix-blend-mode: screen;
+    opacity: calc(1 - var(--hundir, 0));
+}
+/* Cada letra del nombre a una profundidad distinta (--z): se separan un poco con el mouse */
+.hero-letra {
+    translate: calc(var(--hmx, 0) * var(--z, 0) * 9px) calc(var(--hmy, 0) * var(--z, 0) * 5px);
+}
+/* Al bajar, el texto se aleja suavemente */
+.hero-contenido > :first-child {
+    translate: 0 calc(var(--hundir, 0) * -30px);
+    opacity: calc(1 - var(--hundir, 0) * .5);
+}
+
+/* ── Entrada desde la superficie ────────────────────────────────────
+   Solo con html.intro-superficie (lo decide un script en <head>: primera vez en la visita).
+   Es solo CSS: aunque el JavaScript falle, la capa se va sola. */
+.intro-capa { display: none; }
+.intro-superficie .intro-capa {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    pointer-events: none;
+    background: radial-gradient(120% 90% at 50% -10%, #EAF6FF 0%, #7FD8FF 38%, #008FE8 78%, #0E4A9E 100%);
+    animation: intro-sube 1.6s cubic-bezier(.7, 0, .2, 1) .5s forwards;
+}
+/* Destellos de la superficie: tamaños de mosaico distintos y capa girada para que no se vean filas */
+.intro-luz {
+    position: absolute;
+    inset: -20%;
+    background-image:
+        radial-gradient(ellipse 140px 34px at 30% 40%, rgb(255 255 255 / .5), transparent 70%),
+        radial-gradient(ellipse 70px 22px at 72% 66%, rgb(255 255 255 / .42), transparent 70%),
+        radial-gradient(ellipse 190px 40px at 55% 18%, rgb(255 255 255 / .34), transparent 70%),
+        radial-gradient(ellipse 50px 16px at 12% 82%, rgb(255 255 255 / .45), transparent 70%);
+    background-size: 437px 233px, 311px 173px, 563px 281px, 229px 151px;
+    rotate: -9deg;
+    filter: blur(3px);
+    mix-blend-mode: screen;
+    animation: intro-luz 3s linear infinite;
+}
+@keyframes intro-luz {
+    to { background-position: 437px 70px, -311px 52px, 563px -84px, -229px -40px; }
+}
+/* Rayos que bajan desde la superficie */
+.intro-capa::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(100deg, transparent 0 7%, rgb(255 255 255 / .1) 9%, transparent 12% 19%);
+    -webkit-mask-image: linear-gradient(180deg, #000, transparent 75%);
+            mask-image: linear-gradient(180deg, #000, transparent 75%);
+}
+.intro-logo {
+    position: absolute;
+    left: 50%;
+    top: 46%;
+    width: 84px;
+    height: auto;
+    translate: -50% -50%;
+    filter: drop-shadow(0 6px 24px rgb(10 47 107 / .35));
+    animation: intro-logo 1.2s ease-in-out both;
+}
+@keyframes intro-logo {
+    0%   { opacity: 0; scale: .8; }
+    35%  { opacity: 1; scale: 1; }
+    70%  { opacity: 1; scale: 1.04; }
+    100% { opacity: 0; scale: 1.15; }
+}
+/* Borde de la ola: cuelga debajo de la capa mientras sube */
+.intro-ola {
+    position: absolute;
+    left: 0;
+    top: 100%;
+    width: 100%;
+    height: 120px;
+    fill: #0E4A9E;
+}
+@keyframes intro-sube {
+    0%   { transform: translateY(0); }
+    99%  { transform: translateY(calc(-100% - 140px)); visibility: visible; }
+    100% { transform: translateY(calc(-100% - 140px)); visibility: hidden; }
 }
 
 /* Barras de progreso de los banners */
@@ -214,7 +310,7 @@
     .hero .hero-letra, .hero .hero-palabra, .hero .hero-sub, .hero .hero-aparece, .hero .hero-texto, .hero-arco {
         transition: none !important;
     }
-    .hero-arco:hover { transform: none; }
+    .hero-arco, .hero-letra, .hero-contenido > :first-child { transform: none; translate: none; }
 }
 
 /* ── Carta de servicios (inicio) ───────────────────────────────────

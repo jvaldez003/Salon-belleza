@@ -50,21 +50,47 @@
     $configHero = ['total' => $total, 'intervalo' => 7000, 'fotos' => $diapositivas->map(fn ($d) => $urlFoto($d['foto']))->values()];
 @endphp
 
-<section class="hero bg-superficie overflow-hidden" aria-label="Presentación" aria-roledescription="carrusel"
+@push('styles')
+    {{-- Entrada desde la superficie: solo la primera vez en la visita, sin "reducir movimiento" ni enlaces con # --}}
+    <script>
+        try {
+            if (!sessionStorage.getItem('arrecife-intro') && !location.hash && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.documentElement.classList.add('intro-superficie');
+                sessionStorage.setItem('arrecife-intro', '1');
+                setTimeout(function () { document.documentElement.classList.remove('intro-superficie'); }, 2600);
+            }
+        } catch (e) {}
+    </script>
+@endpush
+
+{{-- La superficie del agua vista desde abajo: se abre y deja ver la página (CSS en app.css, "Entrada desde la superficie") --}}
+<div class="intro-capa" aria-hidden="true">
+    <div class="intro-luz"></div>
+    <img src="{{ asset('img/logo-concha.png') }}" alt="" width="171" height="160" class="intro-logo">
+    <svg class="intro-ola" viewBox="0 0 1440 140" preserveAspectRatio="none">
+        <path d="M0 0 H1440 V70 C1320 118 1180 30 1020 64 C860 98 760 128 600 86 C440 44 320 20 180 70 C110 94 50 96 0 80Z"/>
+    </svg>
+</div>
+
+<section class="hero relative isolate bg-superficie overflow-hidden" aria-label="Presentación" aria-roledescription="carrusel"
          x-data="heroArrecife({{ Js::from($configHero) }})"
+         @pointermove="moverEscena($event)" @pointerleave="soltarEscena()"
          @focusin="enfoque = true" @focusout="enfoque = $el.contains($event.relatedTarget)">
+    {{-- Partículas 3D: las lejanas detrás de todo, las cercanas delante del arco --}}
+    <canvas x-ref="burbujasAtras" class="absolute inset-0 w-full h-full pointer-events-none z-0" aria-hidden="true"></canvas>
+    <canvas x-ref="burbujasFrente" class="absolute inset-0 w-full h-full pointer-events-none z-20" aria-hidden="true"></canvas>
     <noscript><style>
         .hero-letra, .hero-palabra, .hero-texto .hero-aparece { transform: none; opacity: 1; filter: none; }
         .hero-sub { opacity: 1; transform: none; }
         .hero-texto:first-child { visibility: visible; }
     </style></noscript>
 
-    <div class="max-w-arrecife mx-auto px-4 sm:px-6 py-8 md:py-16 lg:py-20 grid md:grid-cols-[1.05fr_1fr] gap-8 md:gap-14 lg:gap-20 items-center">
+    <div class="hero-contenido relative z-10 max-w-arrecife mx-auto px-4 sm:px-6 py-8 md:py-16 lg:py-20 grid md:grid-cols-[1.05fr_1fr] gap-8 md:gap-14 lg:gap-20 items-center">
 
         <div class="grid gap-6 min-w-0">
-            <h1 class="opsz-max font-medium tracking-[.02em] leading-[.9] text-[clamp(3.25rem,1.5rem+8vw,8rem)]">
+            <h1 class="hero-titulo relative opsz-max font-medium tracking-[.02em] leading-[.9] text-[clamp(3.25rem,1.5rem+8vw,8rem)]">
                 <span class="sr-only">{{ $nombreNegocio }} Beauty Studio</span>
-                <span class="hero-mascara" aria-hidden="true">@foreach (mb_str_split($nombreNegocio) as $k => $letra)<span class="hero-letra" style="--i: {{ $k }}">{{ $letra === ' ' ? "\u{00A0}" : $letra }}</span>@endforeach</span>
+                <span class="hero-mascara" aria-hidden="true">@foreach (mb_str_split($nombreNegocio) as $k => $letra)<span class="hero-letra" style="--i: {{ $k }}; --z: {{ [.55, 1, .4, .85, .3, .95, .6, .75][$k % 8] }}">{{ $letra === ' ' ? "\u{00A0}" : $letra }}</span>@endforeach</span>
                 <span class="hero-sub block mt-3 font-normal italic tracking-normal text-oceano text-[.32em]" aria-hidden="true">Beauty Studio</span>
             </h1>
 
@@ -124,8 +150,9 @@
         </div>
 
         {{-- Foto en arco: WebGL con onda de agua y luz; sin WebGL, las fotos normales con la luz en canvas --}}
+        <div class="hero-escena order-first md:order-none">
         <div x-ref="foto"
-             class="hero-arco order-first md:order-none relative overflow-hidden bg-bruma-honda aspect-[4/4.4] md:aspect-4/5 max-w-full rounded-t-[160px] md:rounded-t-[220px] rounded-b-foto isolate touch-pan-y select-none"
+             class="hero-arco relative overflow-hidden bg-bruma-honda aspect-[4/4.4] md:aspect-4/5 max-w-full rounded-t-[160px] md:rounded-t-[220px] rounded-b-foto isolate touch-pan-y select-none"
              @pointerenter="encima = $event.pointerType === 'mouse'" @pointerleave="encima = false; soltar()"
              @pointermove="mover($event)" @pointerdown="tocar($event)" @pointerup="levantar($event)" @pointercancel="levantar($event)">
             {{-- Fotos normales: quedan debajo del lienzo (que las cubre al aparecer) y sirven si no hay WebGL --}}
@@ -143,6 +170,9 @@
             <canvas x-ref="lienzo" class="absolute inset-0 w-full h-full opacity-0 transition-opacity duration-1000 pointer-events-none"
                     :class="glActivo && 'opacity-100'" aria-hidden="true"></canvas>
             <div class="absolute inset-0 pointer-events-none bg-gradient-to-b from-transparent from-55% to-abismo/45" aria-hidden="true"></div>
+            {{-- Reflejo de luz sobre el vidrio del arco: sigue la inclinación --}}
+            <div class="hero-reflejo" aria-hidden="true"></div>
+        </div>
         </div>
     </div>
 </section>
