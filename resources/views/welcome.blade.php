@@ -147,70 +147,78 @@
     </div>
 </section>
 
-{{-- ═════════ SERVICIOS: selector de categoría + carta de precios ═════════ --}}
+{{-- ═════════ SERVICIOS: selector de categoría + carta de precios (animaciones en app.css, "Carta de servicios") ═════════ --}}
 @if ($grupos->isNotEmpty())
-<section id="servicios" class="scroll-mt-20 bg-gradient-to-b from-superficie to-bruma to-[18rem] py-14 md:py-24"
+<section id="servicios" class="carta scroll-mt-20 bg-gradient-to-b from-superficie to-bruma to-[18rem] py-14 md:py-24"
          aria-labelledby="titulo-servicios"
-         x-data="{ cat: '{{ $grupos->first()['id'] }}' }">
+         x-data="cartaServicios('{{ $grupos->first()['id'] }}')">
     <div class="max-w-arrecife mx-auto px-4 sm:px-6">
 
         <div class="flex flex-wrap items-end justify-between gap-4 mb-8">
-            <h2 id="titulo-servicios" class="text-[clamp(1.75rem,1.2rem+2.2vw,2.75rem)] leading-tight">Servicios y precios</h2>
-            <p class="max-w-[46ch] text-[0.9375rem] text-texto-suave">Elige una categoría para ver sus servicios. Los precios son en pesos colombianos.</p>
+            <h2 id="titulo-servicios" class="text-[clamp(1.75rem,1.2rem+2.2vw,2.75rem)] leading-tight">
+                @foreach (['Servicios', 'y', 'precios'] as $k => $palabra)<span class="hero-mascara"><span class="carta-palabra" style="--i: {{ $k }}">{{ $palabra }}</span></span>{{ ' ' }}@endforeach
+            </h2>
+            <p class="carta-aparece max-w-[46ch] text-[0.9375rem] text-texto-suave" style="--i: 3">Elige una categoría para ver sus servicios. Los precios son en pesos colombianos.</p>
         </div>
 
-        {{-- Selector de categorías (fila deslizable en el celular) --}}
-        <div class="grid grid-flow-col auto-cols-[minmax(150px,190px)] gap-4 overflow-x-auto snap-x snap-mandatory pb-3 -mx-4 px-4 sm:mx-0 sm:px-0"
+        {{-- Selector de categorías (fila deslizable en el celular) con línea indicadora que se desliza --}}
+        <div x-ref="categorias" class="relative grid grid-flow-col auto-cols-[minmax(150px,190px)] gap-4 overflow-x-auto snap-x snap-mandatory pb-4 -mx-4 px-4 sm:mx-0 sm:px-0"
              role="group" aria-label="Categorías">
             @foreach ($grupos as $g)
-                <button type="button" @click="cat = '{{ $g['id'] }}'"
+                <button type="button" @click="elegir('{{ $g['id'] }}')" data-cat="{{ $g['id'] }}"
                         :aria-pressed="(cat === '{{ $g['id'] }}').toString()"
-                        class="group snap-start grid gap-2.5 text-left rounded-foto">
+                        class="carta-tile carta-aparece group snap-start grid gap-2.5 text-left rounded-foto" style="--i: {{ $loop->index + 2 }}">
                     <x-foto :src="$fotoCategoria($g['categoria'])" :inicial="$g['nombre']" proporcion="4/5"
-                            class="transition-shadow duration-200 ring-offset-2 ring-offset-superficie"
-                            ::class="cat === '{{ $g['id'] }}' ? 'ring-2 ring-oceano' : 'group-hover:ring-1 group-hover:ring-linea'" />
-                    <span class="font-semibold text-[0.9375rem] leading-snug"
-                          :class="cat === '{{ $g['id'] }}' ? 'text-oceano' : 'text-tinta'">{{ $g['nombre'] }}</span>
+                            class="transition-[box-shadow,filter] duration-500 ring-offset-2 ring-offset-superficie"
+                            ::class="cat === '{{ $g['id'] }}' ? 'ring-2 ring-oceano' : 'saturate-[.85] group-hover:saturate-100'" />
+                    <span class="font-semibold text-[0.9375rem] leading-snug transition-colors duration-300"
+                          :class="cat === '{{ $g['id'] }}' ? 'text-oceano' : 'text-tinta group-hover:text-oceano'">{{ $g['nombre'] }}</span>
                     <span class="-mt-2 text-xs text-texto-suave">{{ $g['servicios']->count() }} {{ $g['servicios']->count() === 1 ? 'servicio' : 'servicios' }}</span>
                 </button>
             @endforeach
+            <span x-ref="indicador" class="carta-indicador absolute left-0 bottom-0 h-[2px] rounded-full bg-oceano" aria-hidden="true"></span>
         </div>
 
-        {{-- Carta de precios de la categoría elegida --}}
+        {{-- Carta de precios de la categoría elegida. Al cambiar, el panel vuelve a mostrarse y sus animaciones se repiten. --}}
         @foreach ($grupos as $g)
             <div x-show="cat === '{{ $g['id'] }}'" @if (! $loop->first) x-cloak @endif
-                 class="mt-10 md:mt-14 grid md:grid-cols-[5fr_7fr] gap-8 md:gap-14 items-start">
+                 class="carta-panel mt-10 md:mt-14 grid md:grid-cols-[5fr_7fr] gap-8 md:gap-14 items-start">
 
-                <x-foto :src="$fotoCategoria($g['categoria'], 1)" :alt="$g['nombre']" :inicial="$g['nombre']"
-                        class="aspect-[16/10] md:aspect-4/5 md:sticky md:top-24">
-                    <div class="foto-velo">
-                        <p class="font-display text-3xl leading-none">{{ $g['nombre'] }}</p>
-                        <p class="mt-1.5 text-sm text-sobre-abismo-suave">{{ $g['servicios']->count() }} {{ $g['servicios']->count() === 1 ? 'servicio' : 'servicios' }}</p>
-                    </div>
-                </x-foto>
+                <div class="carta-foto md:sticky md:top-24">
+                    <x-foto :src="$fotoCategoria($g['categoria'], 1)" :alt="$g['nombre']" :inicial="$g['nombre']"
+                            class="aspect-[16/10] md:aspect-4/5">
+                        <div class="foto-velo">
+                            <p class="carta-velo-titulo font-display text-3xl leading-none">{{ $g['nombre'] }}</p>
+                            <p class="carta-velo-sub mt-1.5 text-sm text-sobre-abismo-suave">{{ $g['servicios']->count() }} {{ $g['servicios']->count() === 1 ? 'servicio' : 'servicios' }}</p>
+                        </div>
+                    </x-foto>
+                </div>
 
                 <div class="min-w-0">
                     <h3 class="sr-only">{{ $g['nombre'] }}</h3>
                     <ul class="border-t border-linea">
-                        @foreach ($g['servicios']->sortBy('precio') as $s)
+                        @foreach ($g['servicios']->sortBy('precio')->values() as $n => $s)
                             @php $nombre = $s->nombre_publico; $desde = $s->precio_desde; $fotoServicio = optional($s->imagenes->first())->url; @endphp
-                            <li class="py-4 border-b border-linea flex gap-4 items-start">
+                            <li class="carta-fila relative py-4 border-b border-linea flex gap-4 items-start" style="--i: {{ min($n, 12) }}">
                                 @if ($fotoServicio)
-                                    <x-foto :src="$fotoServicio" proporcion="1/1" class="w-14 shrink-0 !rounded-xl" />
+                                    <x-foto :src="$fotoServicio" proporcion="1/1" class="carta-mini w-14 shrink-0 !rounded-xl" />
                                 @endif
-                                <div class="flex-1 min-w-0 grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-1">
-                                    <span class="font-semibold text-tinta leading-snug">{{ $nombre }}</span>
-                                    <x-precio :valor="$s->precio" :desde="$desde" class="text-right" />
+                                <div class="flex-1 min-w-0 grid gap-y-1">
+                                    <div class="flex items-end gap-2">
+                                        <span class="font-semibold text-tinta leading-snug min-w-0">{{ $nombre }}</span>
+                                        <span class="carta-guia flex-1 min-w-[1.5rem] mb-[.4em] border-b-2 border-dotted border-linea" aria-hidden="true"></span>
+                                        <x-precio :valor="$s->precio" :desde="$desde" class="carta-precio text-right shrink-0" />
+                                    </div>
                                     @if ($s->descripcion)
-                                        <p class="col-span-2 text-sm text-texto-suave leading-relaxed line-clamp-2">{{ Str::legible($s->descripcion) }}</p>
+                                        <p class="text-sm text-texto-suave leading-relaxed line-clamp-2">{{ Str::legible($s->descripcion) }}</p>
                                     @endif
-                                    <span class="col-span-2 text-xs text-texto-suave">{{ $s->duracion_texto }}</span>
+                                    <span class="text-xs text-texto-suave">{{ $s->duracion_texto }}</span>
                                 </div>
                             </li>
                         @endforeach
                     </ul>
 
-                    <div class="mt-7 flex flex-wrap items-center gap-3">
+                    <div class="carta-acciones mt-7 flex flex-wrap items-center gap-3" style="--i: {{ min($g['servicios']->count(), 12) + 1 }}">
                         <x-boton :href="$urlReserva">Reservar cita</x-boton>
                         @if ($whatsappNumero)
                             <x-boton variante="secundario" target="_blank" rel="noopener"
